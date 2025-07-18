@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../widgets/recipe_card.dart';
+import 'recipe_detail.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import 'dart:convert';
 
@@ -10,6 +14,34 @@ class RecommendationPage extends StatelessWidget {
     required this.ingredients,
     this.generatedText,
   });
+
+  Future<bool> _isRecipeSaved(Recipe recipe) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return false;
+    final doc = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('cookbook')
+        .doc(recipe.recipeName)
+        .get();
+    return doc.exists;
+  }
+
+  Future<void> _toggleSaveRecipe(Recipe recipe) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    final docRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('cookbook')
+        .doc(recipe.recipeName);
+    final doc = await docRef.get();
+    if (doc.exists) {
+      await docRef.delete();
+    } else {
+      await docRef.set(recipe.toJson());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,214 +85,62 @@ class RecommendationPage extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: (recipes != null && recipes.isNotEmpty)
-            ? GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 1,
-                  childAspectRatio: 2.2,
-                  mainAxisSpacing: 16,
-                ),
+            ? ListView.builder(
                 itemCount: recipes.length,
                 itemBuilder: (context, idx) {
-                  final recipe = recipes![idx];
-                  return Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: SingleChildScrollView(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              recipe['title']?.toString() ?? 'Recipe',
-                              style: const TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            Row(
-                              children: [
-                                if (recipe['category'] != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: Chip(
-                                      label: Text(
-                                        recipe['category'].toString(),
-                                      ),
-                                    ),
-                                  ),
-                                if (recipe['cuisine'] != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: Chip(
-                                      label: Text(recipe['cuisine'].toString()),
-                                    ),
-                                  ),
-                                if (recipe['difficulty'] != null)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 8.0),
-                                    child: Chip(
-                                      label: Text(
-                                        'Difficulty: ${recipe['difficulty']}',
-                                      ),
-                                    ),
-                                  ),
-                                if (recipe['cooking_duration'] != null)
-                                  Chip(
-                                    label: Text(
-                                      '⏱️ ${recipe['cooking_duration']} min',
-                                    ),
-                                  ),
-                                if (recipe['servings'] != null)
-                                  Chip(
-                                    label: Text(
-                                      'Servings: ${recipe['servings']}',
-                                    ),
-                                  ),
-                              ],
-                            ),
-                            if (recipe['description'] != null)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  top: 8.0,
-                                  bottom: 8.0,
-                                ),
-                                child: Text(
-                                  recipe['description'].toString(),
-                                  style: const TextStyle(fontSize: 15),
-                                ),
-                              ),
-                            if (recipe['nutrition'] != null &&
-                                recipe['nutrition'] is Map)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Row(
-                                  children: [
-                                    if (recipe['nutrition']['calories'] != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 8.0,
+                  final recipeMap = recipes![idx];
+                  final recipe = Recipe.fromJson(recipeMap);
+                  return FutureBuilder<bool>(
+                    future: _isRecipeSaved(recipe),
+                    builder: (context, snapshot) {
+                      final isSaved = snapshot.data ?? false;
+                      return TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0.95, end: 1),
+                        duration: Duration(milliseconds: 500 + idx * 80),
+                        curve: Curves.easeOutBack,
+                        builder: (context, scale, child) =>
+                            Transform.scale(scale: scale, child: child),
+                        child: RecipeCard(
+                          recipe: recipe,
+                          isSaved: isSaved,
+                          onSelect: (r) {
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        FadeTransition(
+                                          opacity: animation,
+                                          child: RecipeDetail(
+                                            recipe: r.toJson(),
+                                            onBack: () =>
+                                                Navigator.pop(context),
+                                            isSaved: isSaved,
+                                            onToggleSave: () async {
+                                              await _toggleSaveRecipe(r);
+                                              (context as Element)
+                                                  .markNeedsBuild();
+                                            },
+                                            onAddToShoppingList:
+                                                () {}, // TODO: implement
+                                            onDownload: null, // TODO: implement
+                                          ),
                                         ),
-                                        child: Text(
-                                          'Calories: ${recipe['nutrition']['calories']}',
-                                        ),
-                                      ),
-                                    if (recipe['nutrition']['protein'] != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 8.0,
-                                        ),
-                                        child: Text(
-                                          'Protein: ${recipe['nutrition']['protein']}g',
-                                        ),
-                                      ),
-                                    if (recipe['nutrition']['carbs'] != null)
-                                      Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 8.0,
-                                        ),
-                                        child: Text(
-                                          'Carbs: ${recipe['nutrition']['carbs']}g',
-                                        ),
-                                      ),
-                                    if (recipe['nutrition']['fat'] != null)
-                                      Text(
-                                        'Fat: ${recipe['nutrition']['fat']}g',
-                                      ),
-                                  ],
-                                ),
+                                transitionDuration: Duration(milliseconds: 400),
                               ),
-                            if (recipe['ingredients'] != null &&
-                                recipe['ingredients'] is List)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Ingredients:',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    ...List.from(recipe['ingredients']).map((
-                                      ing,
-                                    ) {
-                                      if (ing is Map && ing['name'] != null) {
-                                        final qty = ing['quantity'] != null
-                                            ? ing['quantity'].toString()
-                                            : '';
-                                        final unit = ing['unit'] != null
-                                            ? ing['unit'].toString()
-                                            : '';
-                                        return Text(
-                                          '- ${ing['name']}: $qty $unit',
-                                        );
-                                      } else if (ing is String) {
-                                        return Text('- $ing');
-                                      } else {
-                                        return const SizedBox.shrink();
-                                      }
-                                    }).toList(),
-                                  ],
-                                ),
-                              ),
-                            if (recipe['instructions'] != null &&
-                                recipe['instructions'] is List)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Instructions:',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    ...List.from(
-                                      recipe['instructions'],
-                                    ).asMap().entries.map((entry) {
-                                      final idx = entry.key + 1;
-                                      final step = entry.value;
-                                      return Text('$idx. $step');
-                                    }).toList(),
-                                  ],
-                                ),
-                              ),
-                            const Divider(height: 24, thickness: 1),
-                            const Text(
-                              'Raw JSON:',
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            Container(
-                              width: double.infinity,
-                              color: Colors.grey[100],
-                              padding: const EdgeInsets.all(8),
-                              child: Text(
-                                JsonEncoder.withIndent('  ').convert(recipe),
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontFamily: 'monospace',
-                                ),
-                              ),
-                            ),
-                          ],
+                            );
+                          },
+                          onToggleSave: (r) async {
+                            await _toggleSaveRecipe(r);
+                            (context as Element).markNeedsBuild();
+                          },
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   );
                 },
               )
-            : SingleChildScrollView(
-                child: Text(
-                  error ?? (generatedText ?? 'No recipes found.'),
-                  style: const TextStyle(fontSize: 16),
-                ),
-              ),
+            : Center(child: Text(error ?? 'No recipes found.')),
       ),
     );
   }

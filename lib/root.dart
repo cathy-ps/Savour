@@ -36,14 +36,17 @@ class _RootAppState extends State<RootApp> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
           child: GNav(
-            rippleColor: AppColor.secondary.withOpacity(0.2),
-            hoverColor: AppColor.secondary.withOpacity(0.1),
+            rippleColor: AppColor.secondary.withValues(alpha: 0.2),
+            hoverColor: AppColor.secondary.withValues(alpha: 0.1),
             haptic: true,
             tabBorderRadius: 18,
             tabActiveBorder: Border.all(color: AppColor.primary, width: 1),
             tabBorder: Border.all(color: AppColor.darkGrey, width: 1),
             tabShadow: [
-              BoxShadow(color: AppColor.muted.withOpacity(0.2), blurRadius: 8),
+              BoxShadow(
+                color: AppColor.muted.withValues(alpha: 0.2),
+                blurRadius: 8,
+              ),
             ],
             curve: Curves.easeOutExpo,
             duration: Duration(milliseconds: 500),
@@ -51,7 +54,7 @@ class _RootAppState extends State<RootApp> {
             color: AppColor.darkGrey,
             activeColor: AppColor.primary,
             iconSize: 24,
-            tabBackgroundColor: AppColor.primary.withOpacity(0.1),
+            tabBackgroundColor: AppColor.primary.withValues(alpha: 0.1),
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             tabs: [
               GButton(

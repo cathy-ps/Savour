@@ -1,5 +1,8 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../screens/modals/recipe_modal.dart';
 
 class GeminiService {
   Future<String?> generateText(String prompt) async {
@@ -60,5 +63,68 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
       }
       return null;
     }
+  }
+
+  Future<List<Recipe>> generateRecipesWithImages({
+    required List<String> ingredients,
+    String? cuisine,
+    String? dietaryNotes,
+    required String apiKey,
+  }) async {
+    final prompt =
+        '''
+Based on the following criteria, generate a random number of recipes, between 3 and 10.
+- Must-have ingredients: ${ingredients.isNotEmpty ? ingredients.join(', ') : 'any common pantry items'}.
+- Cuisine style: ${cuisine ?? 'any'}.
+- Dietary considerations: ${dietaryNotes ?? 'none'}.
+
+For each recipe, provide all the requested details. Be creative and make the recipes sound delicious.
+If the ingredients are sparse, feel free to supplement with common pantry staples.
+Ensure the instructions are clear and easy to follow.
+
+Return the result as a JSON array of objects with these fields:
+recipeName, description, prepTime, cookTime, totalTime, servings, calories, ingredients (array of strings), instructions (array of strings), imagePrompt (string).
+''';
+
+    // Call Gemini API (text generation)
+    final url = Uri.parse(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+    );
+    final headers = {
+      'Content-Type': 'application/json',
+      'X-goog-api-key': apiKey,
+    };
+    final body = jsonEncode({
+      "contents": [
+        {
+          "parts": [
+            {"text": prompt},
+          ],
+        },
+      ],
+    });
+
+    final response = await http.post(url, headers: headers, body: body);
+    if (response.statusCode != 200)
+      throw Exception('Failed to generate recipes');
+    final text =
+        jsonDecode(
+              response.body,
+            )['candidates'][0]['content']['parts'][0]['text']
+            as String;
+
+    // Parse recipes
+    List<dynamic> jsonList = jsonDecode(text);
+    List<Recipe> recipes = jsonList.map((e) => Recipe.fromJson(e)).toList();
+
+    // Optionally: Generate images for each recipe (using a separate image model API)
+    // This part is pseudo-code, as Gemini image API is not public in Dart/Flutter.
+    // You can use a placeholder or your own image generation API.
+    for (final recipe in recipes) {
+      recipe.imageUrl =
+          'https://placehold.co/500x500/f97316/white?text=${Uri.encodeComponent(recipe.recipeName)}';
+    }
+
+    return recipes;
   }
 }

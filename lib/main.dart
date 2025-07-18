@@ -6,7 +6,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'screens/welcome_screen.dart';
 import 'providers/auth_provider.dart';
 import 'root.dart';
-import 'screens/gemini_test_screen.dart';
+//import 'screens/gemini_test_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

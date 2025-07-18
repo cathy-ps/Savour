@@ -174,49 +174,35 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: () async {
-                      final result = await Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) =>
-                              ProfilePage(initialName: _username),
+                  Container(
+                    padding: const EdgeInsets.all(16.0),
+                    decoration: BoxDecoration(
+                      color: AppColor.secondary,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Row(
+                      children: [
+                        const CircleAvatar(
+                          radius: 24,
+                          backgroundImage: AssetImage(
+                            'assets/images/avatar.png',
+                          ),
                         ),
-                      );
-                      if (result != null && result is String) {
-                        setState(() {
-                          _username = result;
-                        });
-                      }
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.all(16.0),
-                      decoration: BoxDecoration(
-                        color: AppColor.secondary,
-                        borderRadius: BorderRadius.circular(30),
-                      ),
-                      child: Row(
-                        children: [
-                          const CircleAvatar(
-                            radius: 24,
-                            backgroundImage: AssetImage(
-                              'assets/images/avatar.png',
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            'Hello, ${_username ?? 'Guest'}!',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Text(
-                              'Hello, ${_username ?? 'Guest'}!',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: Colors.white),
-                            onPressed: () async {
+                        ),
+                        PopupMenuButton<String>(
+                          icon: const Icon(Icons.settings, color: Colors.white),
+                          onSelected: (value) async {
+                            if (value == 'edit') {
                               final controller = TextEditingController(
                                 text: _username,
                               );
@@ -256,13 +242,46 @@ class _HomeScreenState extends State<HomeScreen> {
                                 setState(() {
                                   _username = newName;
                                 });
-                                await FirebaseAuth.instance.currentUser
-                                    ?.updateProfile(displayName: newName);
+                                final user = FirebaseAuth.instance.currentUser;
+                                await user?.updateProfile(displayName: newName);
+                                if (user != null) {
+                                  await FirebaseFirestore.instance
+                                      .collection('users')
+                                      .doc(user.uid)
+                                      .set({
+                                        'displayName': newName,
+                                      }, SetOptions(merge: true));
+                                }
                               }
-                            },
-                          ),
-                        ],
-                      ),
+                            } else if (value == 'logout') {
+                              await FirebaseAuth.instance.signOut();
+                              if (!mounted) return;
+                              Navigator.of(context).pushAndRemoveUntil(
+                                MaterialPageRoute(
+                                  builder: (context) => const WelcomeScreen(),
+                                ),
+                                (route) => false,
+                              );
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            const PopupMenuItem<String>(
+                              value: 'edit',
+                              child: ListTile(
+                                leading: Icon(Icons.edit),
+                                title: Text('Edit Info'),
+                              ),
+                            ),
+                            const PopupMenuItem<String>(
+                              value: 'logout',
+                              child: ListTile(
+                                leading: Icon(Icons.logout),
+                                title: Text('Logout'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 24),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/recipe_card.dart';
-import 'recipe_detail.dart';
+import '../screens/recipe_detail.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 

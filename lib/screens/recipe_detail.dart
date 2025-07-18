@@ -25,50 +25,75 @@ class RecipeDetail extends StatefulWidget {
   State<RecipeDetail> createState() => _RecipeDetailState();
 }
 
-bool _showSaveModal = false;
-List<Cookbook> _cookbooks = [];
-
 class _RecipeDetailState extends State<RecipeDetail> {
-  void addToShoppingList() {
+  bool _showSaveModal = false;
+  List<Cookbook> _cookbooks = [];
+
+  Future<void> addToShoppingList() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('You must be logged in to add to shopping list.'),
+        ),
+      );
+      return;
+    }
     final recipe = widget.recipe;
     final recipeId = recipe['id'] ?? '';
     final recipeName = recipe['recipeName'] ?? recipe['title'] ?? '';
     // Support both List<String> and List<Map> for ingredients
-    List<String> ingredients = [];
+    List<Map<String, dynamic>> items = [];
     if (recipe['ingredients'] is List) {
       final ing = recipe['ingredients'] as List;
       if (ing.isNotEmpty && ing.first is String) {
-        ingredients = ing.cast<String>();
+        items = ing
+            .map(
+              (name) => {
+                'id': UniqueKey().toString(),
+                'name': name,
+                'checked': false,
+              },
+            )
+            .toList();
       } else if (ing.isNotEmpty && ing.first is Map) {
-        ingredients = ing.map((e) {
+        items = ing.map((e) {
+          String name = '';
           if (e is Map) {
-            final name = e['name'] ?? e['ingredient'] ?? '';
+            final n = e['name'] ?? e['ingredient'] ?? '';
             final qty = e['quantity'] ?? e['qty'] ?? '';
             final unit = e['unit'] ?? '';
-            return [
-              name,
+            name = [
+              n,
               qty,
               unit,
             ].where((x) => x != null && x.toString().isNotEmpty).join(' ');
           }
-          return e.toString();
+          return {'id': UniqueKey().toString(), 'name': name, 'checked': false};
         }).toList();
       }
     }
-    // Navigate to ShoppingListScreen and add the new list
-    Navigator.of(context)
-        .push(
-          MaterialPageRoute(
-            builder: (context) => ShoppingListScreen(key: UniqueKey()),
-          ),
-        )
-        .then((_) {
-          // Optionally: show a snackbar or refresh
-        });
-    // TODO: Integrate with provider or global state for real app
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Added "$recipeName" to shopping lists!')),
-    );
+    try {
+      final shoppingListRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('shoppingLists')
+          .doc();
+      await shoppingListRef.set({
+        'id': shoppingListRef.id,
+        'recipeId': recipeId,
+        'recipeName': recipeName,
+        'items': items,
+        'reminder': null,
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Added "$recipeName" to shopping lists!')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to add to shopping list: $e')),
+      );
+    }
   }
 
   Future<void> _fetchCookbooks() async {

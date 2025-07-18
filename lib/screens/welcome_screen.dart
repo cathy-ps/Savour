@@ -32,6 +32,13 @@ class WelcomeScreen extends StatelessWidget {
               },
               child: const Text('Sign Up'),
             ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pushNamed(context, '/gemini-test');
+              },
+              child: const Text('Test Gemini API'),
+            ),
           ],
         ),
       ),

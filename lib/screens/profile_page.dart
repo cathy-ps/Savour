@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 class ProfilePage extends StatefulWidget {
   final String? initialName;
-  const ProfilePage({Key? key, this.initialName}) : super(key: key);
+  const ProfilePage({super.key, this.initialName});
 
   @override
   State<ProfilePage> createState() => _ProfilePageState();

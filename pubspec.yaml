@@ -1,4 +1,4 @@
-name: savour
+name: savourai
 description: "A new Flutter project."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
@@ -49,6 +49,8 @@ dependencies:
 
 
   google_generative_ai: ^0.4.7
+  http: ^1.1.0
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -72,6 +74,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
+  assets:
+    - assets/.env
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - assets/images/bg.jpg

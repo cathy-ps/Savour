@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'welcome_screen.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import '../services/gemini_service.dart';
 import '../widgets/custom_header.dart';
 import 'profile_page.dart';
 import 'recommendation_page.dart';
+import 'dart:convert';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -17,17 +18,16 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _ingredientsController = TextEditingController();
   final List<String> _ingredientChips = [];
-  late final GenerativeModel _model;
+  final GeminiService _geminiService = GeminiService();
   String? _uid;
   String? _username;
+  String? _generatedText;
+  List<Map<String, dynamic>> _recipes = [];
+  bool _isGenerating = false;
 
   @override
   void initState() {
     super.initState();
-    _model = GenerativeModel(
-      model: 'gemini-pro',
-      apiKey: const String.fromEnvironment('api_key'),
-    );
     _checkAuth();
   }
 
@@ -199,20 +199,171 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
                             onPressed: _ingredientChips.isEmpty
                                 ? null
-                                : () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            RecommendationPage(
-                                              ingredients: _ingredientChips,
+                                : () async {
+                                    setState(() {
+                                      _isGenerating = true;
+                                      _generatedText = null;
+                                    });
+                                    try {
+                                      final response = await _geminiService
+                                          .generateRecipes(_ingredientChips);
+                                      setState(() {
+                                        _isGenerating = false;
+                                      });
+                                      if (response != null &&
+                                          response.isNotEmpty) {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) =>
+                                                RecommendationPage(
+                                                  ingredients:
+                                                      List<String>.from(
+                                                        _ingredientChips,
+                                                      ),
+                                                  generatedText: response,
+                                                ),
+                                          ),
+                                        );
+                                      } else {
+                                        ScaffoldMessenger.of(
+                                          context,
+                                        ).showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                              'Failed to generate recipes. Please try again.',
                                             ),
-                                      ),
-                                    );
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      setState(() {
+                                        _isGenerating = false;
+                                      });
+                                      // ignore: avoid_print
+                                      print('Recipe generation error: $e');
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        const SnackBar(
+                                          content: Text(
+                                            'Failed to generate recipes. Please try again.',
+                                          ),
+                                        ),
+                                      );
+                                    }
                                   },
                             child: const Text('Generate Recipes'),
                           ),
                         ),
+                        const SizedBox(height: 24),
+                        if (_isGenerating)
+                          const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 16),
+                            child: Center(child: CircularProgressIndicator()),
+                          ),
+                        if (!_isGenerating && _recipes.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Generated Recipes:',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                ..._recipes.map(
+                                  (recipe) => Card(
+                                    margin: const EdgeInsets.symmetric(
+                                      vertical: 8,
+                                    ),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            recipe['title'] ?? 'No Title',
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          if (recipe['description'] !=
+                                              null) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              recipe['description'],
+                                              style: const TextStyle(
+                                                fontSize: 15,
+                                              ),
+                                            ),
+                                          ],
+                                          if (recipe['ingredients'] != null &&
+                                              recipe['ingredients']
+                                                  is List) ...[
+                                            const SizedBox(height: 8),
+                                            const Text(
+                                              'Ingredients:',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            ...List.from(recipe['ingredients'])
+                                                .map((ing) => Text('- $ing'))
+                                                .toList(),
+                                          ],
+                                          if (recipe['steps'] != null &&
+                                              recipe['steps'] is List) ...[
+                                            const SizedBox(height: 8),
+                                            const Text(
+                                              'Steps:',
+                                              style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            ...List.from(recipe['steps'])
+                                                .map((step) => Text('- $step'))
+                                                .toList(),
+                                          ],
+                                          if (recipe['cooking_duration'] !=
+                                              null) ...[
+                                            const SizedBox(height: 8),
+                                            Text(
+                                              'Cooking Time: ${recipe['cooking_duration']} min',
+                                            ),
+                                          ],
+                                          if (recipe['difficulty'] != null) ...[
+                                            Text(
+                                              'Difficulty: ${recipe['difficulty']}',
+                                            ),
+                                          ],
+                                          if (recipe['category'] != null) ...[
+                                            Text(
+                                              'Category: ${recipe['category']}',
+                                            ),
+                                          ],
+                                          if (recipe['cuisine'] != null) ...[
+                                            Text(
+                                              'Cuisine: ${recipe['cuisine']}',
+                                            ),
+                                          ],
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                       ],
                     ),
                   ),

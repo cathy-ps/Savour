@@ -13,10 +13,10 @@ class RootApp extends StatefulWidget {
 }
 
 class _RootAppState extends State<RootApp> {
-  // static const TextStyle optionStyle = TextStyle(
-  //   fontSize: 20,
-  //   fontWeight: FontWeight.w500,
-  // );
+  static const TextStyle optionStyle = TextStyle(
+    fontSize: 20,
+    fontWeight: FontWeight.w500,
+  );
   int _selectedIndex = 0;
   late final List<Widget> pages;
 
@@ -34,12 +34,12 @@ class _RootAppState extends State<RootApp> {
       bottomNavigationBar: SizedBox(
         height: 64,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 5.0),
+          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
           child: GNav(
             rippleColor: AppColor.secondary.withOpacity(0.2),
             hoverColor: AppColor.secondary.withOpacity(0.1),
             haptic: true,
-            tabBorderRadius: 20,
+            tabBorderRadius: 18,
             tabActiveBorder: Border.all(color: AppColor.primary, width: 1),
             tabBorder: Border.all(color: AppColor.darkGrey, width: 1),
             tabShadow: [
@@ -47,16 +47,28 @@ class _RootAppState extends State<RootApp> {
             ],
             curve: Curves.easeOutExpo,
             duration: Duration(milliseconds: 500),
-            gap: 6,
+            gap: 8,
             color: AppColor.darkGrey,
             activeColor: AppColor.primary,
-            iconSize: 22,
+            iconSize: 24,
             tabBackgroundColor: AppColor.primary.withOpacity(0.1),
             padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             tabs: [
-              GButton(icon: Icons.home_outlined, text: 'Home'),
-              GButton(icon: Icons.book_outlined, text: 'Cookbook'),
-              GButton(icon: Icons.shopping_cart_outlined, text: 'Shop'),
+              GButton(
+                icon: Icons.home_outlined,
+                text: 'Home',
+                textStyle: optionStyle,
+              ),
+              GButton(
+                icon: Icons.book_outlined,
+                text: 'Cookbook',
+                textStyle: optionStyle,
+              ),
+              GButton(
+                icon: Icons.shopping_cart_outlined,
+                text: 'Shop',
+                textStyle: optionStyle,
+              ),
             ],
             selectedIndex: _selectedIndex,
             onTabChange: (index) {

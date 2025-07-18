@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "841840819943",
+    "project_id": "savour-26402",
+    "storage_bucket": "savour-26402.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:841840819943:android:f34b174a0f654eecc26c42",
+        "android_client_info": {
+          "package_name": "com.example.savour"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyACwuzyGHb6cjnF5w2Yt3mBipHYUTMdnxU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

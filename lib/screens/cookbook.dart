@@ -1,86 +1,161 @@
 import 'package:flutter/material.dart';
-import '../services/gemini_service.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import 'cookbook_detail_screen.dart';
 
-class CookbookScreen extends StatefulWidget {
+class Cookbook {
+  final String id;
+  final String name;
+  Cookbook({required this.id, required this.name});
+  factory Cookbook.fromFirestore(DocumentSnapshot doc) =>
+      Cookbook(id: doc.id, name: doc['title'] ?? doc['name'] ?? doc.id);
+}
+
+final cookbookProvider =
+    StateNotifierProvider<CookbookNotifier, AsyncValue<List<Cookbook>>>((ref) {
+      return CookbookNotifier();
+    });
+
+class CookbookNotifier extends StateNotifier<AsyncValue<List<Cookbook>>> {
+  CookbookNotifier() : super(const AsyncValue.loading()) {
+    loadCookbooks();
+  }
+
+  final _prefsKey = 'cookbooks_cache';
+
+  Future<void> loadCookbooks() async {
+    // Try to load from cache first
+    final prefs = await SharedPreferences.getInstance();
+    final cached = prefs.getString(_prefsKey);
+    if (cached != null) {
+      final decoded = (jsonDecode(cached) as List)
+          .map((e) => Cookbook(id: e['id'], name: e['name']))
+          .toList();
+      state = AsyncValue.data(decoded);
+    }
+    // Always fetch from Firestore for latest
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        state = const AsyncValue.data([]);
+        return;
+      }
+      final snap = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .collection('cookbooks')
+          .get();
+      final cookbooks = snap.docs
+          .map((doc) => Cookbook.fromFirestore(doc))
+          .toList();
+      state = AsyncValue.data(cookbooks);
+      // Save to cache
+      await prefs.setString(
+        _prefsKey,
+        jsonEncode(cookbooks.map((e) => {'id': e.id, 'name': e.name}).toList()),
+      );
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
+  }
+
+  Future<void> addCookbook(String name) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null || name.trim().isEmpty) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('cookbooks')
+        .add({'title': name.trim()});
+    await loadCookbooks();
+  }
+
+  Future<void> deleteCookbook(String id) async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('cookbooks')
+        .doc(id)
+        .delete();
+    await loadCookbooks();
+  }
+}
+
+class CookbookScreen extends ConsumerWidget {
   const CookbookScreen({super.key});
 
   @override
-  State<CookbookScreen> createState() => _CookbookScreenState();
-}
-
-class _CookbookScreenState extends State<CookbookScreen> {
-  final TextEditingController _controller = TextEditingController();
-  String? _aiResponse;
-  bool _loading = false;
-
-  Future<void> _sendPrompt() async {
-    final prompt = _controller.text.trim();
-    if (prompt.isEmpty) return;
-    setState(() {
-      _loading = true;
-      _aiResponse = null;
-    });
-    final gemini = GeminiService();
-    final response = await gemini.generateText(prompt);
-    setState(() {
-      _aiResponse = response;
-      _loading = false;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final cookbooksAsync = ref.watch(cookbookProvider);
+    final controller = TextEditingController();
     return Scaffold(
-      appBar: AppBar(title: const Text('Cookbook')),
+      appBar: AppBar(title: const Text('Cookbooks')),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            const Text('Your Cookbook', style: TextStyle(fontSize: 24)),
-            const SizedBox(height: 24),
-            if (_aiResponse != null && _aiResponse!.isNotEmpty)
-              Align(
-                alignment: Alignment.centerRight,
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade100,
-                    borderRadius: BorderRadius.circular(18),
-                  ),
-                  child: Text(
-                    _aiResponse!,
-                    style: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
-            if (_loading)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 16),
-                child: CircularProgressIndicator(),
-              ),
-            const Spacer(),
             Row(
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _controller,
+                    controller: controller,
                     decoration: const InputDecoration(
-                      hintText: 'Ask Gemini (e.g. Write me a song about pasta)',
+                      hintText: 'New cookbook name',
                       border: OutlineInputBorder(),
                     ),
-                    onSubmitted: (_) => _sendPrompt(),
                   ),
                 ),
                 const SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: _loading ? null : _sendPrompt,
-                  child: const Text('Send'),
+                  onPressed: cookbooksAsync.isLoading
+                      ? null
+                      : () async {
+                          await ref
+                              .read(cookbookProvider.notifier)
+                              .addCookbook(controller.text);
+                          controller.clear();
+                        },
+                  child: const Text('Add'),
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            cookbooksAsync.when(
+              loading: () => const CircularProgressIndicator(),
+              error: (e, st) => Text('Error: $e'),
+              data: (cookbooks) => Expanded(
+                child: ListView.builder(
+                  itemCount: cookbooks.length,
+                  itemBuilder: (context, idx) {
+                    final cb = cookbooks[idx];
+                    return Card(
+                      child: ListTile(
+                        title: Text(cb.name),
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete),
+                          onPressed: () => ref
+                              .read(cookbookProvider.notifier)
+                              .deleteCookbook(cb.id),
+                        ),
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  CookbookDetailScreen(cookbook: cb),
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ),
             ),
           ],
         ),

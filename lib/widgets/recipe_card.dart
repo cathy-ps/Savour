@@ -16,11 +16,27 @@ class Recipe {
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
+    // Support both legacy and Gemini API fields
+    String totalTime = '';
+    if (json['totalTime'] != null && json['totalTime'].toString().isNotEmpty) {
+      totalTime = json['totalTime'].toString();
+    } else if (json['cooking_duration'] != null) {
+      totalTime = '${json['cooking_duration']} min';
+    }
+
+    String calories = '';
+    if (json['calories'] != null && json['calories'].toString().isNotEmpty) {
+      calories = json['calories'].toString();
+    } else if (json['nutrition'] != null &&
+        json['nutrition']['calories'] != null) {
+      calories = '${json['nutrition']['calories']} kcal';
+    }
+
     return Recipe(
-      recipeName: json['recipeName'] as String,
-      description: json['description'] as String,
-      totalTime: json['totalTime'] as String,
-      calories: json['calories'] as String,
+      recipeName: json['recipeName'] ?? json['title'] ?? '',
+      description: json['description'] ?? '',
+      totalTime: totalTime,
+      calories: calories,
       imageUrl: json['imageUrl'] as String?,
     );
   }

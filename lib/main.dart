@@ -34,7 +34,7 @@ class MyApp extends ConsumerWidget {
           seedColor: const Color.fromARGB(236, 79, 169, 113),
         ),
       ),
-      routes: {'/gemini-test': (context) => const GeminiTestScreen()},
+      //routes: {'/gemini-test': (context) => const GeminiTestScreen()},
       home: authState.when(
         data: (user) => user == null ? const WelcomeScreen() : const RootApp(),
         loading: () =>

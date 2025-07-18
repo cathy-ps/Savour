@@ -66,8 +66,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             .collection('users')
             .doc(uid)
             .collection('cookbooks')
-            .doc('Favourites')
-            .set({'createdAt': FieldValue.serverTimestamp()});
+            .add({
+              'title': 'Favourites',
+              'description': 'Your default cookbook for favourite recipes',
+              'createdAt': FieldValue.serverTimestamp(),
+            });
       }
       Navigator.pop(context, uid);
     } on FirebaseAuthException catch (e) {

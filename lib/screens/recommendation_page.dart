@@ -67,58 +67,190 @@ class RecommendationPage extends StatelessWidget {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 100,
-                          height: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[200],
-                            borderRadius: const BorderRadius.horizontal(
-                              left: Radius.circular(16),
+                    margin: const EdgeInsets.symmetric(vertical: 8),
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              recipe['title']?.toString() ?? 'Recipe',
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          child: const Icon(
-                            Icons.fastfood,
-                            size: 48,
-                            color: Colors.grey,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                recipe['title']?.toString() ?? 'Recipe',
-                                style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                            Row(
+                              children: [
+                                if (recipe['category'] != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Chip(
+                                      label: Text(
+                                        recipe['category'].toString(),
+                                      ),
+                                    ),
+                                  ),
+                                if (recipe['cuisine'] != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Chip(
+                                      label: Text(recipe['cuisine'].toString()),
+                                    ),
+                                  ),
+                                if (recipe['difficulty'] != null)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 8.0),
+                                    child: Chip(
+                                      label: Text(
+                                        'Difficulty: ${recipe['difficulty']}',
+                                      ),
+                                    ),
+                                  ),
+                                if (recipe['cooking_duration'] != null)
+                                  Chip(
+                                    label: Text(
+                                      '⏱️ ${recipe['cooking_duration']} min',
+                                    ),
+                                  ),
+                                if (recipe['servings'] != null)
+                                  Chip(
+                                    label: Text(
+                                      'Servings: ${recipe['servings']}',
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            if (recipe['description'] != null)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  top: 8.0,
+                                  bottom: 8.0,
+                                ),
+                                child: Text(
+                                  recipe['description'].toString(),
+                                  style: const TextStyle(fontSize: 15),
                                 ),
                               ),
-                              if (recipe['calories'] != null)
-                                Text('Calories: ${recipe['calories']}'),
-                              if (recipe['description'] != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8.0),
-                                  child: Text(
-                                    recipe['description'].toString(),
-                                    style: const TextStyle(fontSize: 15),
-                                  ),
+                            if (recipe['nutrition'] != null &&
+                                recipe['nutrition'] is Map)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Row(
+                                  children: [
+                                    if (recipe['nutrition']['calories'] != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 8.0,
+                                        ),
+                                        child: Text(
+                                          'Calories: ${recipe['nutrition']['calories']}',
+                                        ),
+                                      ),
+                                    if (recipe['nutrition']['protein'] != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 8.0,
+                                        ),
+                                        child: Text(
+                                          'Protein: ${recipe['nutrition']['protein']}g',
+                                        ),
+                                      ),
+                                    if (recipe['nutrition']['carbs'] != null)
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 8.0,
+                                        ),
+                                        child: Text(
+                                          'Carbs: ${recipe['nutrition']['carbs']}g',
+                                        ),
+                                      ),
+                                    if (recipe['nutrition']['fat'] != null)
+                                      Text(
+                                        'Fat: ${recipe['nutrition']['fat']}g',
+                                      ),
+                                  ],
                                 ),
-                              if (recipe['cooking_duration'] != null)
-                                Text('⏱️ ${recipe['cooking_duration']} min'),
-                              if (recipe['difficulty'] != null)
-                                Text('Difficulty: ${recipe['difficulty']}'),
-                              if (recipe['category'] != null)
-                                Text('Category: ${recipe['category']}'),
-                              if (recipe['cuisine'] != null)
-                                Text('Cuisine: ${recipe['cuisine']}'),
-                            ],
-                          ),
+                              ),
+                            if (recipe['ingredients'] != null &&
+                                recipe['ingredients'] is List)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Ingredients:',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    ...List.from(recipe['ingredients']).map((
+                                      ing,
+                                    ) {
+                                      if (ing is Map && ing['name'] != null) {
+                                        final qty = ing['quantity'] != null
+                                            ? ing['quantity'].toString()
+                                            : '';
+                                        final unit = ing['unit'] != null
+                                            ? ing['unit'].toString()
+                                            : '';
+                                        return Text(
+                                          '- ${ing['name']}: $qty $unit',
+                                        );
+                                      } else if (ing is String) {
+                                        return Text('- $ing');
+                                      } else {
+                                        return const SizedBox.shrink();
+                                      }
+                                    }).toList(),
+                                  ],
+                                ),
+                              ),
+                            if (recipe['instructions'] != null &&
+                                recipe['instructions'] is List)
+                              Padding(
+                                padding: const EdgeInsets.only(bottom: 8.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Instructions:',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    ...List.from(
+                                      recipe['instructions'],
+                                    ).asMap().entries.map((entry) {
+                                      final idx = entry.key + 1;
+                                      final step = entry.value;
+                                      return Text('$idx. $step');
+                                    }).toList(),
+                                  ],
+                                ),
+                              ),
+                            const Divider(height: 24, thickness: 1),
+                            const Text(
+                              'Raw JSON:',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            Container(
+                              width: double.infinity,
+                              color: Colors.grey[100],
+                              padding: const EdgeInsets.all(8),
+                              child: Text(
+                                JsonEncoder.withIndent('  ').convert(recipe),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontFamily: 'monospace',
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   );
                 },

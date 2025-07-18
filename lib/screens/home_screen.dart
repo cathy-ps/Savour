@@ -92,41 +92,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(
                           'What can you cook with what you have?',
-                          style: TextStyle(
-                            fontSize: 28,
+                          style: const TextStyle(
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.black87,
                           ),
                           textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          'Enter your leftover or available ingredients and discover new recipes!',
-                          style: TextStyle(fontSize: 16, color: Colors.black54),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: _ingredientChips
-                              .map(
-                                (ingredient) => Chip(
-                                  label: Text(ingredient),
-                                  deleteIcon: const Icon(Icons.close, size: 18),
-                                  onDeleted: () {
-                                    setState(() {
-                                      _ingredientChips.remove(ingredient);
-                                    });
-                                  },
-                                  backgroundColor: Colors.green.shade50,
-                                  labelStyle: const TextStyle(
-                                    color: Colors.green,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              )
-                              .toList(),
                         ),
                         const SizedBox(height: 12),
                         TextField(
@@ -207,25 +177,54 @@ class _HomeScreenState extends State<HomeScreen> {
                                     try {
                                       final response = await _geminiService
                                           .generateRecipes(_ingredientChips);
-                                      setState(() {
-                                        _isGenerating = false;
-                                      });
+                                      List<Map<String, dynamic>> recipes = [];
                                       if (response != null &&
                                           response.isNotEmpty) {
-                                        Navigator.push(
-                                          context,
-                                          MaterialPageRoute(
-                                            builder: (context) =>
-                                                RecommendationPage(
-                                                  ingredients:
-                                                      List<String>.from(
-                                                        _ingredientChips,
-                                                      ),
-                                                  generatedText: response,
-                                                ),
-                                          ),
-                                        );
+                                        // Try to extract a JSON array from the response
+                                        String jsonArray = response.trim();
+                                        if (!jsonArray.startsWith('[') ||
+                                            !jsonArray.endsWith(']')) {
+                                          final start = jsonArray.indexOf('[');
+                                          final end = jsonArray.lastIndexOf(
+                                            ']',
+                                          );
+                                          if (start != -1 &&
+                                              end != -1 &&
+                                              end > start) {
+                                            jsonArray = jsonArray.substring(
+                                              start,
+                                              end + 1,
+                                            );
+                                          }
+                                        }
+                                        try {
+                                          final decoded = jsonArray.isNotEmpty
+                                              ? jsonArray
+                                              : '[]';
+                                          final parsed = decoded.isNotEmpty
+                                              ? (jsonDecode(decoded) as List)
+                                                    .map(
+                                                      (e) =>
+                                                          Map<
+                                                            String,
+                                                            dynamic
+                                                          >.from(e),
+                                                    )
+                                                    .toList()
+                                              : <Map<String, dynamic>>[];
+                                          recipes = parsed;
+                                        } catch (_) {
+                                          recipes = [];
+                                        }
+                                        setState(() {
+                                          _isGenerating = false;
+                                          _generatedText = response;
+                                          _recipes = recipes;
+                                        });
                                       } else {
+                                        setState(() {
+                                          _isGenerating = false;
+                                        });
                                         ScaffoldMessenger.of(
                                           context,
                                         ).showSnackBar(
@@ -361,6 +360,34 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                 ),
+                                const SizedBox(height: 24),
+                                if (_generatedText != null &&
+                                    _generatedText!.isNotEmpty)
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Divider(height: 24, thickness: 1),
+                                      const Text(
+                                        'Raw JSON Output:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      Container(
+                                        width: double.infinity,
+                                        color: Color(0xFFF6F6F6),
+                                        padding: const EdgeInsets.all(8),
+                                        child: Text(
+                                          _generatedText!,
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            fontFamily: 'monospace',
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                               ],
                             ),
                           ),

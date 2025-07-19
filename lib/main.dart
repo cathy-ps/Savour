@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
           seedColor: const Color.fromARGB(236, 79, 169, 113),
         ),
       ),
-      home: RootNavigation(),
+      home: WelcomePage(),
       debugShowCheckedModeBanner: false,
     );
   }

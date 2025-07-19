@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
 import 'package:savourai/screens/home.dart';
+import '../screens/cookbook.dart';
 
 class RootNavigation extends StatefulWidget {
   const RootNavigation({super.key});
@@ -14,7 +15,8 @@ class _RootNavigationState extends State<RootNavigation> {
 
   static final List<Widget> _pages = <Widget>[
     HomeScreen(),
-    Center(child: Text('Likes Page', style: TextStyle(fontSize: 24))),
+    CookbookScreen(),
+    //Center(child: Text('Likes Page', style: TextStyle(fontSize: 24))),
     Center(child: Text('Search Page', style: TextStyle(fontSize: 24))),
     Center(child: Text('Profile Page', style: TextStyle(fontSize: 24))),
   ];
@@ -41,12 +43,12 @@ class _RootNavigationState extends State<RootNavigation> {
           ),
           SalomonBottomBarItem(
             icon: const Icon(Icons.favorite_border),
-            title: const Text("Likes"),
+            title: const Text("Cookbook"),
             selectedColor: Colors.pink,
           ),
           SalomonBottomBarItem(
             icon: const Icon(Icons.search),
-            title: const Text("Search"),
+            title: const Text("Shopping List"),
             selectedColor: Colors.orange,
           ),
           SalomonBottomBarItem(

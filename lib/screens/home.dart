@@ -6,6 +6,9 @@ import 'dart:convert';
 import 'package:savourai/models/recipe_model.dart';
 import 'package:savourai/services/gemini_service.dart';
 import 'package:savourai/widgets/recipe_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:savourai/widgets/cookbook_selector_dialog.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,6 +24,97 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _error;
   String? _rawResult;
   final GeminiService _geminiService = GeminiService();
+  // Cookbook and favorite state
+  List<String> _userCookbookIds = [];
+  Map<String, List<String>> _cookbookRecipeIds =
+      {}; // cookbookId -> List<recipeId>
+  String? _userId; // Set this to the current user's ID
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserCookbooks();
+  }
+
+  Future<void> _fetchUserCookbooks() async {
+    _userId = FirebaseAuth.instance.currentUser?.uid;
+    final cookbooksSnap = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(_userId)
+        .collection('cookbooks')
+        .get();
+    setState(() {
+      _userCookbookIds = cookbooksSnap.docs.map((doc) => doc.id).toList();
+    });
+    for (var doc in cookbooksSnap.docs) {
+      final recipesSnap = await doc.reference.collection('recipes').get();
+      _cookbookRecipeIds[doc.id] = recipesSnap.docs.map((r) => r.id).toList();
+    }
+  }
+
+  String _getRecipeId(Recipe recipe) {
+    // Use recipe.id if available, otherwise fallback to hashCode or title
+    try {
+      // ignore: invalid_use_of_protected_member
+      return (recipe as dynamic).id ?? recipe.title.hashCode.toString();
+    } catch (_) {
+      return recipe.title.hashCode.toString();
+    }
+  }
+
+  bool _isRecipeInAnyCookbook(Recipe recipe) {
+    final id = _getRecipeId(recipe);
+    return _cookbookRecipeIds.values.any((ids) => ids.contains(id));
+  }
+
+  Future<void> _onFavoriteTap(Recipe recipe) async {
+    final id = _getRecipeId(recipe);
+    // If recipe is already saved in any cookbook, unsave from all
+    final savedCookbookIds = _cookbookRecipeIds.entries
+        .where((entry) => entry.value.contains(id))
+        .map((entry) => entry.key)
+        .toList();
+    if (savedCookbookIds.isNotEmpty) {
+      // Remove from all cookbooks where it is saved
+      for (final cookbookId in savedCookbookIds) {
+        final recipeRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(_userId)
+            .collection('cookbooks')
+            .doc(cookbookId)
+            .collection('recipes')
+            .doc(id);
+        await recipeRef.delete();
+        setState(() {
+          _cookbookRecipeIds[cookbookId]?.remove(id);
+        });
+      }
+      return;
+    }
+    // Otherwise, prompt user to select a cookbook
+    final selectedCookbookId = await showDialog<String>(
+      context: context,
+      builder: (context) => CookbookSelectorDialog(
+        cookbookIds: _userCookbookIds,
+        onCreateNew: () {
+          // Optionally, add logic to create a new cookbook
+        },
+      ),
+    );
+    if (selectedCookbookId == null) return;
+    final recipeRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(_userId)
+        .collection('cookbooks')
+        .doc(selectedCookbookId)
+        .collection('recipes')
+        .doc(id);
+    await recipeRef.set(recipe.toJson());
+    setState(() {
+      _cookbookRecipeIds[selectedCookbookId] ??= [];
+      _cookbookRecipeIds[selectedCookbookId]!.add(id);
+    });
+  }
 
   Future<void> _searchRecipes() async {
     setState(() {
@@ -181,7 +275,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: _recipes.length,
                     itemBuilder: (context, index) {
                       final recipe = _recipes[index];
-                      return RecipeCard(recipe: recipe);
+                      return RecipeCard(
+                        recipe: recipe,
+                        isFavorite: _isRecipeInAnyCookbook(recipe),
+                        onFavoriteTap: () => _onFavoriteTap(recipe),
+                      );
                     },
                   ),
                 ),

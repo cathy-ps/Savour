@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savourai/widgets/custom_search_bar.dart';
 import 'profile.dart';
 
@@ -10,14 +11,19 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:savourai/widgets/cookbook_selector_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class HomeScreen extends StatefulWidget {
+import '../providers/shoppinglist_firestore_provider.dart';
+import '../models/shopping_list_model.dart';
+import '../providers/saved_recipes_provider.dart';
+import 'package:savourai/screens/recipe_detail.dart';
+
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   List<Recipe> _recipes = [];
   bool _loading = false;
@@ -62,13 +68,15 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  bool _isRecipeInAnyCookbook(Recipe recipe) {
+  bool _isRecipeSavedGlobally(Recipe recipe) {
     final id = _getRecipeId(recipe);
-    return _cookbookRecipeIds.values.any((ids) => ids.contains(id));
+    final savedIds = ref.watch(savedRecipeIdsProvider);
+    return savedIds.contains(id);
   }
 
   Future<void> _onFavoriteTap(Recipe recipe) async {
     final id = _getRecipeId(recipe);
+    final savedIds = ref.read(savedRecipeIdsProvider.notifier);
     // If recipe is already saved in any cookbook, unsave from all
     final savedCookbookIds = _cookbookRecipeIds.entries
         .where((entry) => entry.value.contains(id))
@@ -89,6 +97,12 @@ class _HomeScreenState extends State<HomeScreen> {
           _cookbookRecipeIds[cookbookId]?.remove(id);
         });
       }
+      // Update global saved state
+      savedIds.update((state) {
+        final newSet = Set<String>.from(state);
+        newSet.remove(id);
+        return newSet;
+      });
       return;
     }
     // Otherwise, prompt user to select a cookbook
@@ -113,6 +127,12 @@ class _HomeScreenState extends State<HomeScreen> {
     setState(() {
       _cookbookRecipeIds[selectedCookbookId] ??= [];
       _cookbookRecipeIds[selectedCookbookId]!.add(id);
+    });
+    // Update global saved state
+    savedIds.update((state) {
+      final newSet = Set<String>.from(state);
+      newSet.add(id);
+      return newSet;
     });
   }
 
@@ -275,10 +295,61 @@ class _HomeScreenState extends State<HomeScreen> {
                     itemCount: _recipes.length,
                     itemBuilder: (context, index) {
                       final recipe = _recipes[index];
-                      return RecipeCard(
-                        recipe: recipe,
-                        isFavorite: _isRecipeInAnyCookbook(recipe),
-                        onFavoriteTap: () => _onFavoriteTap(recipe),
+                      return Column(
+                        children: [
+                          InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => RecipeDetailScreen(
+                                    recipe: recipe,
+                                    recipeId: _getRecipeId(recipe),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: RecipeCard(
+                              recipe: recipe,
+                              isFavorite: _isRecipeSavedGlobally(recipe),
+                              onFavoriteTap: () => _onFavoriteTap(recipe),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          ElevatedButton(
+                            onPressed: () async {
+                              // Add all ingredients to Firestore shopping list as a new list
+                              final now = DateTime.now();
+                              final recipeId = _getRecipeId(recipe);
+                              final shoppingListId =
+                                  '${recipeId}_${now.millisecondsSinceEpoch}';
+                              final shoppingListIngredients = recipe.ingredients
+                                  .map(
+                                    (ing) => ShoppingListIngredient(
+                                      id: UniqueKey().toString(),
+                                      name: ing.name,
+                                      quantity: ing.quantity,
+                                      unit: ing.unit,
+                                    ),
+                                  )
+                                  .toList();
+                              final shoppingList = ShoppingList(
+                                id: shoppingListId,
+                                name: recipe.title,
+                                ingredients: shoppingListIngredients,
+                                createdAt: now,
+                                reminder: null,
+                              );
+                              await addShoppingList(shoppingList);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Added to shopping list!'),
+                                ),
+                              );
+                            },
+                            child: const Text('Add to Shopping List'),
+                          ),
+                        ],
                       );
                     },
                   ),

@@ -1,4 +1,5 @@
 class Recipe {
+  final String id;
   final String title;
   final String category; // e.g., breakfast, lunch, dinner, snack, dessert
   final String cuisine;
@@ -9,8 +10,10 @@ class Recipe {
   final List<RecipeIngredient> ingredients;
   final List<String> instructions;
   final Nutrition nutrition;
+  final String imageUrl;
 
   Recipe({
+    this.id = '',
     required this.title,
     required this.category,
     required this.cuisine,
@@ -21,9 +24,11 @@ class Recipe {
     required this.ingredients,
     required this.instructions,
     required this.nutrition,
+    this.imageUrl = '',
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json) => Recipe(
+    id: json['id'] ?? '',
     title: json['title'] ?? '',
     category: json['category'] ?? '',
     cuisine: json['cuisine'] ?? '',
@@ -42,9 +47,11 @@ class Recipe {
         .map((x) => x.toString())
         .toList(),
     nutrition: Nutrition.fromJson(json['nutrition'] ?? {}),
+    imageUrl: json['imageUrl'] ?? json['image_url'] ?? '',
   );
 
   Map<String, dynamic> toJson() => {
+    'id': id,
     'title': title,
     'category': category,
     'cuisine': cuisine,
@@ -55,6 +62,7 @@ class Recipe {
     'ingredients': ingredients.map((x) => x.toJson()).toList(),
     'instructions': instructions,
     'nutrition': nutrition.toJson(),
+    'imageUrl': imageUrl,
   };
 }
 

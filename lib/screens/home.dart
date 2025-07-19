@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:savourai/constant/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savourai/widgets/custom_search_bar.dart';
 import 'profile.dart';
@@ -31,10 +32,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String? _rawResult;
   final GeminiService _geminiService = GeminiService();
   // Cookbook and favorite state
-  List<String> _userCookbookIds = [];
+  List<Cookbook> _userCookbooks = [];
   Map<String, List<String>> _cookbookRecipeIds =
       {}; // cookbookId -> List<recipeId>
   String? _userId; // Set this to the current user's ID
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Good morning';
+    } else if (hour < 17) {
+      return 'Good afternoon';
+    } else {
+      return 'Good evening';
+    }
+  }
+
+  String _getUserName() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return '';
+    if (user.displayName != null && user.displayName!.isNotEmpty) {
+      return user.displayName!;
+    }
+    if (user.email != null && user.email!.isNotEmpty) {
+      return user.email!.split('@')[0];
+    }
+    return '';
+  }
 
   @override
   void initState() {
@@ -49,8 +73,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .doc(_userId)
         .collection('cookbooks')
         .get();
+    final cookbooks = cookbooksSnap.docs
+        .map((doc) => Cookbook.fromJson(doc.data(), doc.id))
+        .toList();
     setState(() {
-      _userCookbookIds = cookbooksSnap.docs.map((doc) => doc.id).toList();
+      _userCookbooks = cookbooks;
     });
     for (var doc in cookbooksSnap.docs) {
       final recipesSnap = await doc.reference.collection('recipes').get();
@@ -109,7 +136,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final selectedCookbookId = await showDialog<String>(
       context: context,
       builder: (context) => CookbookSelectorDialog(
-        cookbookIds: _userCookbookIds,
+        cookbooks: _userCookbooks,
         onCreateNew: () {
           // Optionally, add logic to create a new cookbook
         },
@@ -171,7 +198,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -183,9 +210,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   horizontal: 20,
                   vertical: 24,
                 ),
-                decoration: const BoxDecoration(
-                  color: Color(0xFF7C4DFF),
-                  borderRadius: BorderRadius.only(
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  borderRadius: const BorderRadius.only(
                     bottomLeft: Radius.circular(24),
                     bottomRight: Radius.circular(24),
                   ),
@@ -198,21 +225,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
+                          children: [
                             Text(
-                              'Hello,',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 18,
-                              ),
-                            ),
-                            SizedBox(height: 2),
-                            Text(
-                              'Good Morning',
-                              style: TextStyle(
-                                color: Colors.white,
+                              '${_getGreeting()}, ${_getUserName()}',
+                              style: const TextStyle(
+                                color: AppColors.white,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            const Text(
+                              'What ingredients do you have?',
+                              style: TextStyle(
+                                color: AppColors.muted,
+                                fontSize: 16,
                               ),
                             ),
                           ],
@@ -220,7 +247,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         IconButton(
                           icon: const Icon(
                             Icons.person_outline,
-                            color: Colors.white,
+                            color: AppColors.white,
                             size: 28,
                           ),
                           onPressed: () {
@@ -236,10 +263,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     const SizedBox(height: 20),
                     CustomSearchBar(
                       controller: _searchController,
-                      hintText: 'Enter your ingredients here',
+                      hintText: 'e.g. eggs, rice, etc',
                       submitIcon: const Icon(
                         Icons.rocket_launch_outlined,
-                        color: Colors.white,
+                        color: AppColors.white,
                       ),
                       onSubmit: _searchRecipes,
                     ),
@@ -252,7 +279,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 Center(
                   child: Text(
                     _error!,
-                    style: const TextStyle(color: Colors.red),
+                    style: const TextStyle(color: AppColors.error),
                   ),
                 ),
               if (_rawResult != null)
@@ -264,13 +291,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Container(
-                      color: Colors.black12,
+                      color: AppColors.card,
                       padding: const EdgeInsets.all(12),
                       child: Text(
                         _rawResult!,
                         style: const TextStyle(
                           fontFamily: 'monospace',
                           fontSize: 13,
+                          color: AppColors.text,
                         ),
                       ),
                     ),

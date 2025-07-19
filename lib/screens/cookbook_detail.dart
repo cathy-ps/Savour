@@ -1,3 +1,4 @@
+import '../constant/colors.dart';
 import '../providers/shoppinglist_firestore_provider.dart';
 import '../models/shopping_list_model.dart';
 import 'package:flutter/material.dart';
@@ -33,9 +34,12 @@ class CookbookDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(cookbook.title),
-        backgroundColor: const Color(0xFF7C4DFF),
-        foregroundColor: Colors.white,
+        title: Text(
+          cookbook.title,
+          style: const TextStyle(color: AppColors.text),
+        ),
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
         elevation: 0,
       ),
       body: FutureBuilder<List<Recipe>>(
@@ -117,6 +121,14 @@ class CookbookDetailScreen extends ConsumerWidget {
                     ),
                     const SizedBox(height: 4),
                     ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.white,
+                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       onPressed: () async {
                         // Add all ingredients to Firestore shopping list as a new list
                         final now = DateTime.now();
@@ -125,7 +137,7 @@ class CookbookDetailScreen extends ConsumerWidget {
                         final shoppingListIngredients = recipe.ingredients
                             .map(
                               (ing) => ShoppingListIngredient(
-                                id: UniqueKey().toString(),
+                                id: '${ing.name}-${ing.quantity}-${ing.unit}',
                                 name: ing.name,
                                 quantity: ing.quantity,
                                 unit: ing.unit,

@@ -1,3 +1,4 @@
+import '../constant/colors.dart';
 import '../widgets/shopping_list_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -63,7 +64,11 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       builder: (context, ref, _) {
         final shoppingListsAsync = ref.watch(shoppingListsProvider);
         return Scaffold(
-          appBar: AppBar(title: const Text('Shopping Lists')),
+          appBar: AppBar(
+            title: const Text('Shopping Lists'),
+            backgroundColor: AppColors.primary,
+            foregroundColor: AppColors.white,
+          ),
           body: shoppingListsAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(child: Text('Error: $e')),
@@ -106,7 +111,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                             Navigator.of(context).pop(true),
                                         child: const Text(
                                           'Delete',
-                                          style: TextStyle(color: Colors.red),
+                                          style: TextStyle(color: AppColors.error),
                                         ),
                                       ),
                                     ],
@@ -140,8 +145,8 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: i == _currentPage
-                                ? Colors.deepPurple
-                                : Colors.grey[300],
+                                ? AppColors.primary
+                                : AppColors.card,
                           ),
                         ),
                       ),

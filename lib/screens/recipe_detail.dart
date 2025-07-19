@@ -1,3 +1,4 @@
+import '../constant/colors.dart';
 import '../providers/shoppinglist_firestore_provider.dart';
 import '../models/shopping_list_model.dart';
 import 'package:flutter/material.dart';
@@ -75,13 +76,13 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_recipe?.title ?? 'Recipe'),
-        backgroundColor: const Color(0xFF7C4DFF),
-        foregroundColor: Colors.white,
+        backgroundColor: AppColors.primary,
+        foregroundColor: AppColors.white,
         actions: [
           IconButton(
             icon: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: Colors.white,
+              color: AppColors.white,
             ),
             onPressed: _recipe == null
                 ? null
@@ -130,13 +131,23 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
           ),
         ],
       ),
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: AppColors.background,
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-          ? Center(child: Text(_error!))
+          ? Center(
+              child: Text(
+                _error!,
+                style: const TextStyle(color: AppColors.error),
+              ),
+            )
           : _recipe == null
-          ? const Center(child: Text('Recipe not found.'))
+          ? const Center(
+              child: Text(
+                'Recipe not found.',
+                style: TextStyle(color: AppColors.muted),
+              ),
+            )
           : SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
@@ -163,6 +174,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
+                        color: AppColors.text,
                       ),
                     ),
                     if (_recipe!.cookingDuration != null)
@@ -173,12 +185,12 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                             const Icon(
                               Icons.timer,
                               size: 18,
-                              color: Colors.black54,
+                              color: AppColors.muted,
                             ),
                             const SizedBox(width: 6),
                             Text(
                               '${_recipe!.cookingDuration} min',
-                              style: const TextStyle(color: Colors.black54),
+                              style: const TextStyle(color: AppColors.muted),
                             ),
                           ],
                         ),
@@ -186,10 +198,10 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                     const SizedBox(height: 10),
                     Text(
                       'Ingredients',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: Colors.grey[800],
+                        color: AppColors.text,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -201,7 +213,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                             const Icon(
                               Icons.circle,
                               size: 8,
-                              color: Color(0xFF7C4DFF),
+                              color: AppColors.primary,
                             ),
                             const SizedBox(width: 8),
                             Expanded(child: Text(ing.name)),
@@ -212,10 +224,10 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                     const SizedBox(height: 18),
                     Text(
                       'Instructions',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 18,
-                        color: Colors.grey[800],
+                        color: AppColors.text,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -229,14 +241,14 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                               width: 24,
                               height: 24,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF7C4DFF),
+                                color: AppColors.primary,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Center(
                                 child: Text(
                                   '${entry.key + 1}',
                                   style: const TextStyle(
-                                    color: Colors.white,
+                                    color: AppColors.white,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -256,8 +268,8 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                             icon: const Icon(Icons.shopping_cart),
                             label: const Text('Add to Shopping List'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF7C4DFF),
-                              foregroundColor: Colors.white,
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: AppColors.white,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                             ),
                             onPressed: () async {
@@ -300,9 +312,9 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                           icon: const Icon(Icons.download),
                           label: const Text('Download'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            foregroundColor: const Color(0xFF7C4DFF),
-                            side: const BorderSide(color: Color(0xFF7C4DFF)),
+                            backgroundColor: AppColors.white,
+                            foregroundColor: AppColors.primary,
+                            side: const BorderSide(color: AppColors.primary),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () {

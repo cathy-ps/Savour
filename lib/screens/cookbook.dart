@@ -1,3 +1,6 @@
+import '../constant/colors.dart';
+import 'package:flutter/cupertino.dart';
+
 import 'package:savourai/models/recipe_model.dart';
 import 'package:savourai/widgets/recipe_card.dart';
 import 'package:savourai/screens/cookbook_detail.dart';
@@ -30,12 +33,12 @@ class _CookbookScreenState extends State<CookbookScreen> {
   String? _error;
   String? _userId;
   final List<Color> _colorOptions = [
-    Colors.blue,
-    Colors.green,
-    Colors.orange,
-    Colors.purple,
-    Colors.red,
-    Colors.teal,
+    AppColors.primary,
+    AppColors.secondary,
+    AppColors.card,
+    AppColors.success,
+    AppColors.error,
+    AppColors.muted,
   ];
 
   @override
@@ -54,10 +57,30 @@ class _CookbookScreenState extends State<CookbookScreen> {
           .collection('cookbooks')
           .orderBy('createdAt', descending: true)
           .get();
+      List<Cookbook> cookbooks = snap.docs
+          .map((doc) => Cookbook.fromJson(doc.data(), doc.id))
+          .toList();
+
+      // Fetch actual recipe count for each cookbook
+      for (int i = 0; i < cookbooks.length; i++) {
+        final cb = cookbooks[i];
+        final recipesSnap = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_userId)
+            .collection('cookbooks')
+            .doc(cb.id)
+            .collection('recipes')
+            .get();
+        cookbooks[i] = Cookbook(
+          id: cb.id,
+          title: cb.title,
+          createdAt: cb.createdAt,
+          recipeCount: recipesSnap.docs.length,
+          color: cb.color,
+        );
+      }
       setState(() {
-        _cookbooks = snap.docs
-            .map((doc) => Cookbook.fromJson(doc.data(), doc.id))
-            .toList();
+        _cookbooks = cookbooks;
         _loading = false;
       });
     } catch (e) {
@@ -88,7 +111,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F6FA),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -97,7 +120,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
               decoration: const BoxDecoration(
-                color: Color(0xFF7C4DFF),
+                color: AppColors.primary,
                 borderRadius: BorderRadius.only(
                   bottomLeft: Radius.circular(24),
                   bottomRight: Radius.circular(24),
@@ -109,7 +132,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
                   const Text(
                     'Cookbook',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppColors.white,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -120,8 +143,8 @@ class _CookbookScreenState extends State<CookbookScreen> {
                       Expanded(child: Container()),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: const Color(0xFF7C4DFF),
+                          backgroundColor: AppColors.white,
+                          foregroundColor: AppColors.primary,
                         ),
                         icon: const Icon(Icons.add),
                         label: const Text('New Cookbook'),
@@ -146,7 +169,10 @@ class _CookbookScreenState extends State<CookbookScreen> {
             if (_loading) const Center(child: CircularProgressIndicator()),
             if (_error != null)
               Center(
-                child: Text(_error!, style: const TextStyle(color: Colors.red)),
+                child: Text(
+                  _error!,
+                  style: const TextStyle(color: AppColors.error),
+                ),
               ),
             if (!_loading && _cookbooks.isNotEmpty)
               Expanded(
@@ -164,17 +190,18 @@ class _CookbookScreenState extends State<CookbookScreen> {
                     itemBuilder: (context, index) {
                       final cb = _cookbooks[index];
                       final color = Color(
-                        (cb.toJson()['color'] ?? Colors.blue.value) as int,
+                        (cb.toJson()['color'] ?? AppColors.primary.value)
+                            as int,
                       );
                       return GestureDetector(
                         onTap: () => _openCookbookRecipes(cb),
                         child: Container(
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: AppColors.card,
                             borderRadius: BorderRadius.circular(18),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black12,
+                                color: AppColors.border.withOpacity(0.2),
                                 blurRadius: 4,
                                 offset: Offset(0, 2),
                               ),
@@ -183,13 +210,18 @@ class _CookbookScreenState extends State<CookbookScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.folder, size: 54, color: color),
+                              Icon(
+                                CupertinoIcons.folder_fill,
+                                size: 54,
+                                color: color,
+                              ),
                               const SizedBox(height: 10),
                               Text(
                                 cb.title,
                                 style: const TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 16,
+                                  color: AppColors.text,
                                 ),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
@@ -199,7 +231,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
                                 '${cb.recipeCount} recipes',
                                 style: const TextStyle(
                                   fontSize: 13,
-                                  color: Colors.black54,
+                                  color: AppColors.muted,
                                 ),
                               ),
                             ],

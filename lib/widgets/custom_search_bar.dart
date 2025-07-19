@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:savourai/constant/colors.dart';
 
 class CustomSearchBar extends StatelessWidget {
   final TextEditingController? controller;
@@ -54,7 +55,7 @@ class CustomSearchBar extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: const Color(0xFF7C4DFF),
+                color: AppColors.primary,
                 shape: BoxShape.circle,
               ),
               child: submitIcon,

@@ -1,86 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
-import 'constant/AppColor.dart';
-import 'screens/home_screen.dart';
-import 'screens/cookbook.dart';
-import 'screens/shoppinglist.dart';
+import 'package:salomon_bottom_bar/salomon_bottom_bar.dart';
+import 'package:savourai/screens/home.dart';
 
-class RootApp extends StatefulWidget {
-  const RootApp({super.key});
+class RootNavigation extends StatefulWidget {
+  const RootNavigation({super.key});
 
   @override
-  State<RootApp> createState() => _RootAppState();
+  State<RootNavigation> createState() => _RootNavigationState();
 }
 
-class _RootAppState extends State<RootApp> {
-  static const TextStyle optionStyle = TextStyle(
-    fontSize: 20,
-    fontWeight: FontWeight.w500,
-  );
+class _RootNavigationState extends State<RootNavigation> {
   int _selectedIndex = 0;
-  late final List<Widget> pages;
 
-  @override
-  void initState() {
-    super.initState();
-    pages = [HomeScreen(), CookbookScreen(), ShoppingListScreen()];
-  }
+  static final List<Widget> _pages = <Widget>[
+    HomeScreen(),
+    Center(child: Text('Likes Page', style: TextStyle(fontSize: 24))),
+    Center(child: Text('Search Page', style: TextStyle(fontSize: 24))),
+    Center(child: Text('Profile Page', style: TextStyle(fontSize: 24))),
+  ];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColor.background,
-      body: SafeArea(child: pages[_selectedIndex]),
-      bottomNavigationBar: SizedBox(
-        height: 64,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 5.0),
-          child: GNav(
-            rippleColor: AppColor.secondary.withValues(alpha: 0.2),
-            hoverColor: AppColor.secondary.withValues(alpha: 0.1),
-            haptic: true,
-            tabBorderRadius: 18,
-            tabActiveBorder: Border.all(color: AppColor.primary, width: 1),
-            tabBorder: Border.all(color: AppColor.darkGrey, width: 1),
-            tabShadow: [
-              BoxShadow(
-                color: AppColor.muted.withValues(alpha: 0.2),
-                blurRadius: 8,
-              ),
-            ],
-            curve: Curves.easeOutExpo,
-            duration: Duration(milliseconds: 500),
-            gap: 8,
-            color: AppColor.darkGrey,
-            activeColor: AppColor.primary,
-            iconSize: 24,
-            tabBackgroundColor: AppColor.primary.withValues(alpha: 0.1),
-            padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            tabs: [
-              GButton(
-                icon: Icons.home_outlined,
-                text: 'Home',
-                textStyle: optionStyle,
-              ),
-              GButton(
-                icon: Icons.book_outlined,
-                text: 'Cookbook',
-                textStyle: optionStyle,
-              ),
-              GButton(
-                icon: Icons.shopping_cart_outlined,
-                text: 'Shop',
-                textStyle: optionStyle,
-              ),
-            ],
-            selectedIndex: _selectedIndex,
-            onTabChange: (index) {
-              setState(() {
-                _selectedIndex = index;
-              });
-            },
+      //appBar: AppBar(title: const Text('SavourAI')),
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: SalomonBottomBar(
+        currentIndex: _selectedIndex,
+        selectedItemColor: const Color(0xff6200ee),
+        unselectedItemColor: const Color(0xff757575),
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        items: [
+          SalomonBottomBarItem(
+            icon: const Icon(Icons.home),
+            title: const Text("Home"),
+            selectedColor: Colors.purple,
           ),
-        ),
+          SalomonBottomBarItem(
+            icon: const Icon(Icons.favorite_border),
+            title: const Text("Likes"),
+            selectedColor: Colors.pink,
+          ),
+          SalomonBottomBarItem(
+            icon: const Icon(Icons.search),
+            title: const Text("Search"),
+            selectedColor: Colors.orange,
+          ),
+          SalomonBottomBarItem(
+            icon: const Icon(Icons.person),
+            title: const Text("Profile"),
+            selectedColor: Colors.teal,
+          ),
+        ],
       ),
     );
   }

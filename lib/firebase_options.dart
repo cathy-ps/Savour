@@ -42,12 +42,12 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions web = FirebaseOptions(
     apiKey: 'AIzaSyASLMsj-yuEwvBP-1IYm77fIior_RW7ICc',
-    appId: '1:841840819943:web:e3b2fcddc63db8cfc26c42',
+    appId: '1:841840819943:web:cae9345cbdee8cfdc26c42',
     messagingSenderId: '841840819943',
     projectId: 'savour-26402',
     authDomain: 'savour-26402.firebaseapp.com',
     storageBucket: 'savour-26402.firebasestorage.app',
-    measurementId: 'G-XYZ93EDYXF',
+    measurementId: 'G-R6X6KSD4P2',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
@@ -78,11 +78,11 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions windows = FirebaseOptions(
     apiKey: 'AIzaSyASLMsj-yuEwvBP-1IYm77fIior_RW7ICc',
-    appId: '1:841840819943:web:cae9345cbdee8cfdc26c42',
+    appId: '1:841840819943:web:b5fb7e16c3fbcf59c26c42',
     messagingSenderId: '841840819943',
     projectId: 'savour-26402',
     authDomain: 'savour-26402.firebaseapp.com',
     storageBucket: 'savour-26402.firebasestorage.app',
-    measurementId: 'G-R6X6KSD4P2',
+    measurementId: 'G-SH9YT47EV5',
   );
 }

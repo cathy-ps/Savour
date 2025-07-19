@@ -1,203 +1,122 @@
 import 'package:flutter/material.dart';
-
-class Recipe {
-  final String recipeName;
-  final String description;
-  final String totalTime;
-  final String calories;
-  final String? imageUrl;
-
-  Recipe({
-    required this.recipeName,
-    required this.description,
-    required this.totalTime,
-    required this.calories,
-    this.imageUrl,
-  });
-
-  factory Recipe.fromJson(Map<String, dynamic> json) {
-    // Support both legacy and Gemini API fields
-    String totalTime = '';
-    if (json['totalTime'] != null && json['totalTime'].toString().isNotEmpty) {
-      totalTime = json['totalTime'].toString();
-    } else if (json['cooking_duration'] != null) {
-      totalTime = '${json['cooking_duration']} min';
-    }
-
-    String calories = '';
-    if (json['calories'] != null && json['calories'].toString().isNotEmpty) {
-      calories = json['calories'].toString();
-    } else if (json['nutrition'] != null &&
-        json['nutrition']['calories'] != null) {
-      calories = '${json['nutrition']['calories']} kcal';
-    }
-
-    return Recipe(
-      recipeName: json['recipeName'] ?? json['title'] ?? '',
-      description: json['description'] ?? '',
-      totalTime: totalTime,
-      calories: calories,
-      imageUrl: json['imageUrl'] as String?,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'recipeName': recipeName,
-      'description': description,
-      'totalTime': totalTime,
-      'calories': calories,
-      'imageUrl': imageUrl,
-    };
-  }
-}
+import 'package:savourai/models/recipe_model.dart';
 
 class RecipeCard extends StatelessWidget {
   final Recipe recipe;
-  final void Function(Recipe) onSelect;
-  final bool isSaved;
-  final void Function(Recipe) onToggleSave;
+  final VoidCallback? onTap;
+  final bool isFavorite;
+  final VoidCallback? onFavoriteTap;
+  static const String imageUrl =
+      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80';
 
   const RecipeCard({
-    Key? key,
+    super.key,
     required this.recipe,
-    required this.onSelect,
-    required this.isSaved,
-    required this.onToggleSave,
-  }) : super(key: key);
+    this.onTap,
+    this.isFavorite = false,
+    this.onFavoriteTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => onSelect(recipe),
-      child: Container(
+      onTap: onTap,
+      child: Card(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         margin: const EdgeInsets.symmetric(vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.grey.shade200),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        elevation: 4,
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
           children: [
-            Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(20),
-                  ),
-                  child: Image.network(
-                    recipe.imageUrl ??
-                        'https://placehold.co/500x500/f97316/white?text=Recipe',
-                    height: 180,
-                    width: double.infinity,
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                Positioned.fill(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [Color(0x99000000), Colors.transparent],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: Material(
-                    color: Colors.white.withValues(alpha: 0.8),
-                    shape: const CircleBorder(),
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(100),
-                      onTap: () {
-                        onToggleSave(recipe);
-                      },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Icon(
-                          isSaved ? Icons.favorite : Icons.favorite_border,
-                          color: isSaved ? Colors.red : Colors.orange,
-                          size: 22,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  bottom: 0,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Text(
-                      recipe.recipeName,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        shadows: [Shadow(blurRadius: 4, color: Colors.black)],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+            // Background image
+            SizedBox(
+              height: 200,
+              width: double.infinity,
+              child: Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) =>
+                    Container(color: Colors.grey[300]),
+              ),
             ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    recipe.description,
-                    style: const TextStyle(color: Colors.black54, fontSize: 14),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+            // Dark overlay for readability
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.15),
+                    Colors.black.withOpacity(0.5),
+                  ],
+                ),
+              ),
+            ),
+            // Cooking duration pill (top left)
+            Positioned(
+              top: 12,
+              left: 12,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.6),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  '${recipe.cookingDuration} min',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.access_time,
-                            size: 18,
-                            color: Colors.orange,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            recipe.totalTime,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.local_fire_department,
-                            size: 18,
-                            color: Colors.orange,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            recipe.calories,
-                            style: const TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ],
-                      ),
-                    ],
+                ),
+              ),
+            ),
+            // Title (bottom left)
+            Positioned(
+              top: 10,
+              right: 10,
+              child: GestureDetector(
+                onTap: onFavoriteTap,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.6),
+                    shape: BoxShape.circle,
                   ),
-                ],
+                  child: Icon(
+                    isFavorite ? Icons.favorite : Icons.favorite_border,
+                    color: isFavorite ? Colors.redAccent : Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 12,
+              bottom: 18,
+              right: 12,
+              child: Text(
+                recipe.title,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.black54,
+                      offset: Offset(0, 1),
+                      blurRadius: 4,
+                    ),
+                  ],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
           ],

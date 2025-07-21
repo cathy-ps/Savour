@@ -4,18 +4,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savourai/widgets/custom_search_bar.dart';
 import 'profile.dart';
 
-import 'dart:convert';
 import 'package:savourai/models/recipe_model.dart';
 import 'package:savourai/models/cookbook_model.dart';
-import 'package:savourai/services/gemini_service.dart';
 import 'package:savourai/widgets/recipe_card.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:savourai/widgets/cookbook_selector_dialog.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import '../providers/shoppinglist_firestore_provider.dart';
-import '../models/shopping_list_model.dart';
 import '../providers/saved_recipes_provider.dart';
+import '../providers/home_search_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
@@ -27,16 +24,10 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
-  List<Recipe> _recipes = [];
-  bool _loading = false;
-  String? _error;
-  String? _rawResult;
-  final GeminiService _geminiService = GeminiService();
   // Cookbook and favorite state
   List<Cookbook> _userCookbooks = [];
-  final Map<String, List<String>> _cookbookRecipeIds =
-      {}; // cookbookId -> List<recipeId>
-  String? _userId; // Set this to the current user's ID
+  final Map<String, List<String>> _cookbookRecipeIds = {};
+  String? _userId;
 
   String _getGreeting() {
     final hour = DateTime.now().hour;
@@ -143,7 +134,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         },
       ),
     );
-    if (selectedCookbookId == null) return;
+    if (selectedCookbookId == null || selectedCookbookId.isEmpty) return;
     final recipeRef = FirebaseFirestore.instance
         .collection('users')
         .doc(_userId)
@@ -164,40 +155,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     });
   }
 
-  Future<void> _searchRecipes() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-      _recipes = [];
-      _rawResult = null;
-    });
-    try {
-      final ingredients = _searchController.text
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-      final recipes = await _geminiService.generateRecipes(ingredients);
-      setState(() {
-        _recipes = recipes;
-        _rawResult = recipes.isNotEmpty
-            ? jsonEncode(recipes.map((e) => e.toJson()).toList())
-            : null;
-        _loading = false;
-        if (recipes.isEmpty) {
-          _error = 'No recipes generated.';
-        }
-      });
-    } catch (e) {
-      setState(() {
-        _error = 'Failed to load recipes.';
-        _loading = false;
-      });
-    }
+  void _searchRecipes() {
+    ref.read(homeSearchProvider.notifier).searchRecipes(_searchController.text);
   }
 
   @override
   Widget build(BuildContext context) {
+    final searchState = ref.watch(homeSearchProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -275,15 +239,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 24),
-              if (_loading) const Center(child: CircularProgressIndicator()),
-              if (_error != null)
+              if (searchState.loading)
+                const Center(child: CircularProgressIndicator()),
+              if (searchState.error != null)
                 Center(
                   child: Text(
-                    _error!,
+                    searchState.error!,
                     style: const TextStyle(color: AppColors.error),
                   ),
                 ),
-              if (_rawResult != null)
+              if (searchState.rawResult != null)
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20,
@@ -295,7 +260,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       color: AppColors.card,
                       padding: const EdgeInsets.all(12),
                       child: Text(
-                        _rawResult!,
+                        searchState.rawResult!,
                         style: const TextStyle(
                           fontFamily: 'monospace',
                           fontSize: 13,
@@ -305,7 +270,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     ),
                   ),
                 ),
-              if (_recipes.isNotEmpty)
+              if (searchState.recipes.isNotEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
@@ -321,64 +286,26 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                           mainAxisSpacing: 12,
                           childAspectRatio: 0.7,
                         ),
-                    itemCount: _recipes.length,
+                    itemCount: searchState.recipes.length,
                     itemBuilder: (context, index) {
-                      final recipe = _recipes[index];
-                      return Column(
-                        children: [
-                          InkWell(
-                            borderRadius: BorderRadius.circular(16),
-                            onTap: () {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) => RecipeDetailScreen(
-                                    recipe: recipe,
-                                    recipeId: _getRecipeId(recipe),
-                                  ),
-                                ),
-                              );
-                            },
-                            child: RecipeCard(
-                              recipe: recipe,
-                              isFavorite: _isRecipeSavedGlobally(recipe),
-                              onFavoriteTap: () => _onFavoriteTap(recipe),
+                      final recipe = searchState.recipes[index];
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(16),
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => RecipeDetailScreen(
+                                recipe: recipe,
+                                recipeId: _getRecipeId(recipe),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 4),
-                          ElevatedButton(
-                            onPressed: () async {
-                              // Add all ingredients to Firestore shopping list as a new list
-                              final now = DateTime.now();
-                              final recipeId = _getRecipeId(recipe);
-                              final shoppingListId =
-                                  '${recipeId}_${now.millisecondsSinceEpoch}';
-                              final shoppingListIngredients = recipe.ingredients
-                                  .map(
-                                    (ing) => ShoppingListIngredient(
-                                      id: UniqueKey().toString(),
-                                      name: ing.name,
-                                      quantity: ing.quantity,
-                                      unit: ing.unit,
-                                    ),
-                                  )
-                                  .toList();
-                              final shoppingList = ShoppingList(
-                                id: shoppingListId,
-                                name: recipe.title,
-                                ingredients: shoppingListIngredients,
-                                createdAt: now,
-                                reminder: null,
-                              );
-                              await addShoppingList(shoppingList);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Added to shopping list!'),
-                                ),
-                              );
-                            },
-                            child: const Text('Add to Shopping List'),
-                          ),
-                        ],
+                          );
+                        },
+                        child: RecipeCard(
+                          recipe: recipe,
+                          isFavorite: _isRecipeSavedGlobally(recipe),
+                          onFavoriteTap: () => _onFavoriteTap(recipe),
+                        ),
                       );
                     },
                   ),

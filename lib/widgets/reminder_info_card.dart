@@ -17,6 +17,19 @@ class ReminderInfoCard extends StatelessWidget {
       onClearReminder != null,
       'onClearReminder callback must be provided',
     );
+    String formatDate(DateTime date) {
+      final d = date.toLocal();
+      final day = d.day.toString().padLeft(2, '0');
+      final month = d.month.toString().padLeft(2, '0');
+      final year = d.year.toString().substring(2);
+      int hour = d.hour;
+      final minute = d.minute.toString().padLeft(2, '0');
+      final ampm = hour >= 12 ? 'pm' : 'am';
+      hour = hour % 12;
+      if (hour == 0) hour = 12;
+      return '$day/$month/$year, $hour:$minute $ampm';
+    }
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: ShadCard(
@@ -26,7 +39,7 @@ class ReminderInfoCard extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Reminder Set for: ${reminder!.toLocal().toString().substring(0, 16)}',
+                'Reminder Set for: \n${formatDate(reminder!)}',
                 style: const TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.w400,

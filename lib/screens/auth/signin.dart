@@ -88,196 +88,194 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
-          child: ShadCard(
-            width: 400,
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.restaurant_menu,
+                      size: 32,
+                      color: Theme.of(context).primaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Welcome Back',
+                    style: ShadTheme.of(context).textTheme.h2,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Sign in to your account to continue',
+                    style: ShadTheme.of(context).textTheme.muted,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 32),
+                  if (_errorMessage != null) ...[
                     Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.restaurant_menu,
-                        size: 32,
-                        color: Theme.of(context).primaryColor,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Text(
-                      'Welcome Back',
-                      style: ShadTheme.of(context).textTheme.h2,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Sign in to your account to continue',
-                      style: ShadTheme.of(context).textTheme.muted,
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 32),
-                    if (_errorMessage != null) ...[
-                      Container(
-                        width: double.infinity,
-                        margin: const EdgeInsets.only(bottom: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          _errorMessage!,
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-                    ShadInputFormField(
-                      controller: _emailController,
-                      id: 'email',
-                      label: const Text('Email Address'),
-                      placeholder: const Text('Enter your email'),
-                      validator: _validateEmail,
-                      leading: const Padding(
-                        padding: EdgeInsets.all(4.0),
-                        child: Icon(Icons.mail_outline),
-                      ),
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                    ),
-                    const SizedBox(height: 16),
-                    ShadInputFormField(
-                      controller: _passwordController,
-                      id: 'password',
-                      label: const Text('Password'),
-                      placeholder: const Text('Enter your password'),
-                      validator: _validatePassword,
-                      obscureText: _obscurePassword,
-                      leading: const Padding(
-                        padding: EdgeInsets.all(4.0),
-                        child: Icon(Icons.lock_outline),
-                      ),
-                      trailing: ShadButton.ghost(
-                        width: 24,
-                        height: 24,
-                        padding: EdgeInsets.zero,
-                        child: Icon(
-                          _obscurePassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: ShadButton.ghost(
-                        size: ShadButtonSize.sm,
-                        onPressed: () async {
-                          if (_emailController.text.trim().isEmpty) {
-                            setState(() {
-                              _errorMessage = 'Please enter your email first';
-                            });
-                            return;
-                          }
-                          final authNotifier = ref.read(
-                            authNotifierProvider.notifier,
-                          );
-                          final result = await authNotifier
-                              .sendPasswordResetEmail(_emailController.text);
-                          if (result.isSuccess) {
-                            ShadToaster.of(context).show(
-                              ShadToast(
-                                title: const Text('Success'),
-                                description: const Text(
-                                  'Password reset email sent!',
-                                ),
-                                duration: const Duration(seconds: 2),
-                              ),
-                            );
-                          } else {
-                            setState(() {
-                              _errorMessage =
-                                  result.error ?? 'Failed to send reset email';
-                            });
-                          }
-                        },
-                        child: const Text('Forgot password?'),
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    ShadButton(
-                      onPressed: _isLoading ? null : _signIn,
                       width: double.infinity,
-                      size: ShadButtonSize.lg,
-                      child: _isLoading
-                          ? Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                const Text('Signing in...'),
-                              ],
-                            )
-                          : const Text('Sign In'),
-                    ),
-                    const SizedBox(height: 32),
-                    Row(
-                      children: [
-                        const Expanded(child: Divider()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Text(
-                            'or',
-                            style: ShadTheme.of(context).textTheme.muted,
-                          ),
-                        ),
-                        const Expanded(child: Divider()),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'Don\'t have an account? ',
-                          style: ShadTheme.of(context).textTheme.muted,
-                        ),
-                        ShadButton.ghost(
-                          size: ShadButtonSize.sm,
-                          onPressed: () {
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const SignUpScreen(),
-                              ),
-                            );
-                          },
-                          child: const Text('Sign up'),
-                        ),
-                      ],
+                      margin: const EdgeInsets.only(bottom: 16),
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
                     ),
                   ],
-                ),
+                  ShadInputFormField(
+                    controller: _emailController,
+                    id: 'email',
+                    label: const Text('Email Address'),
+                    placeholder: const Text('Enter your email'),
+                    validator: _validateEmail,
+                    leading: const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Icon(Icons.mail_outline),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.next,
+                  ),
+                  const SizedBox(height: 16),
+                  ShadInputFormField(
+                    controller: _passwordController,
+                    id: 'password',
+                    label: const Text('Password'),
+                    placeholder: const Text('Enter your password'),
+                    validator: _validatePassword,
+                    obscureText: _obscurePassword,
+                    leading: const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Icon(Icons.lock_outline),
+                    ),
+                    trailing: ShadButton.ghost(
+                      width: 24,
+                      height: 24,
+                      padding: EdgeInsets.zero,
+                      child: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: ShadButton.ghost(
+                      size: ShadButtonSize.sm,
+                      onPressed: () async {
+                        if (_emailController.text.trim().isEmpty) {
+                          setState(() {
+                            _errorMessage = 'Please enter your email first';
+                          });
+                          return;
+                        }
+                        final authNotifier = ref.read(
+                          authNotifierProvider.notifier,
+                        );
+                        final result = await authNotifier
+                            .sendPasswordResetEmail(_emailController.text);
+                        if (result.isSuccess) {
+                          ShadToaster.of(context).show(
+                            ShadToast(
+                              title: const Text('Success'),
+                              description: const Text(
+                                'Password reset email sent!',
+                              ),
+                              duration: const Duration(seconds: 2),
+                            ),
+                          );
+                        } else {
+                          setState(() {
+                            _errorMessage =
+                                result.error ?? 'Failed to send reset email';
+                          });
+                        }
+                      },
+                      child: const Text('Forgot password?'),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  ShadButton(
+                    onPressed: _isLoading ? null : _signIn,
+                    width: double.infinity,
+                    size: ShadButtonSize.lg,
+                    child: _isLoading
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              const Text('Signing in...'),
+                            ],
+                          )
+                        : const Text('Sign In'),
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      const Expanded(child: Divider()),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'or',
+                          style: ShadTheme.of(context).textTheme.muted,
+                        ),
+                      ),
+                      const Expanded(child: Divider()),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'Don\'t have an account? ',
+                        style: ShadTheme.of(context).textTheme.muted,
+                      ),
+                      ShadButton.ghost(
+                        size: ShadButtonSize.sm,
+                        onPressed: () {
+                          Navigator.pushReplacement(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const SignUpScreen(),
+                            ),
+                          );
+                        },
+                        child: const Text('Sign up'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),

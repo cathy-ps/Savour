@@ -3,6 +3,7 @@ import '../widgets/shopping_list_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/shoppinglist_firestore_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class ShoppingListScreen extends StatefulWidget {
   const ShoppingListScreen({super.key});
@@ -86,10 +87,13 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                       onPageChanged: (i) => setState(() => _currentPage = i),
                       itemBuilder: (context, index) {
                         final list = shoppingLists[index];
+                        final userId =
+                            FirebaseAuth.instance.currentUser?.uid ?? '';
                         return Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                           child: ShoppingListCard(
                             list: list,
+                            userId: userId,
                             onDelete: () async {
                               final confirm = await showDialog<bool>(
                                 context: context,

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import '../models/shopping_list_model.dart';
 import 'reminder_info_card.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ShoppingListCard extends StatefulWidget {
   final ShoppingList list;
+  final String userId;
   final VoidCallback onDelete;
   final VoidCallback? onSetReminder;
 
   const ShoppingListCard({
     super.key,
     required this.list,
+    required this.userId,
     required this.onDelete,
     this.onSetReminder,
   });
@@ -61,10 +64,11 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
               children: [
                 ReminderInfoCard(
                   reminder: list.reminder,
-                  onClearReminder: () {
+                  onClearReminder: () async {
                     setState(() {
                       list.reminder = null;
                     });
+                    await _removeReminderFromFirestore(list.id);
                   },
                 ),
                 Row(
@@ -221,5 +225,15 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
         ],
       ),
     );
+  }
+
+  Future<void> _removeReminderFromFirestore(String listId) async {
+    final firestore = FirebaseFirestore.instance;
+    await firestore
+        .collection('users')
+        .doc(widget.userId)
+        .collection('shoppingLists')
+        .doc(listId)
+        .update({'reminder': null});
   }
 }

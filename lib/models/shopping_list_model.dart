@@ -31,7 +31,7 @@ class ShoppingList {
   final String id;
   final String name;
   final List<ShoppingListIngredient> ingredients;
-  DateTime? reminder;
+  final DateTime? reminder;
   final DateTime createdAt;
 
   ShoppingList({

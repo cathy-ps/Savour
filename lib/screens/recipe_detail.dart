@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/recipe_model.dart';
 import '../providers/saved_recipes_provider.dart';
-import '../providers/shoppinglist_providers.dart';
 
 class RecipeDetailScreen extends ConsumerStatefulWidget {
   final String recipeId;

@@ -5,8 +5,8 @@ class CustomSearchBar extends StatelessWidget {
   final TextEditingController? controller;
   final String hintText;
   final Widget? hintIcon;
-  final Widget submitIcon;
-  final VoidCallback onSubmit;
+  final Widget? submitIcon;
+  final VoidCallback? onSubmit;
   final ValueChanged<String>? onChanged;
 
   const CustomSearchBar({
@@ -14,8 +14,8 @@ class CustomSearchBar extends StatelessWidget {
     this.controller,
     this.hintIcon,
     required this.hintText,
-    required this.submitIcon,
-    required this.onSubmit,
+    this.submitIcon,
+    this.onSubmit,
     this.onChanged,
   });
 
@@ -37,6 +37,7 @@ class CustomSearchBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          // If hintIcon is provided, display it
           if (hintIcon != null) ...[hintIcon!, const SizedBox(width: 8)],
           Expanded(
             child: TextField(
@@ -47,20 +48,30 @@ class CustomSearchBar extends StatelessWidget {
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
+                hintStyle: const TextStyle(
+                  color: AppColors.border,
+                  fontSize: 16,
+                ),
               ),
             ),
           ),
-          GestureDetector(
-            onTap: onSubmit,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
+          if (submitIcon != null && onSubmit != null)
+            GestureDetector(
+              onTap: () {
+                FocusScope.of(context).unfocus();
+                if (onSubmit != null) {
+                  onSubmit!();
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: submitIcon,
               ),
-              child: submitIcon,
             ),
-          ),
         ],
       ),
     );

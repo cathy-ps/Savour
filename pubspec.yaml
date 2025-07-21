@@ -54,8 +54,6 @@ dependencies:
   flutter_dotenv: ^5.2.1
   shared_preferences: ^2.2.2
   salomon_bottom_bar: ^3.3.2
-  fluttertoast: ^8.2.12
-  modular_ui: ^0.0.5
 
 dev_dependencies:
   flutter_test:

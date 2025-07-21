@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:savourai/constant/colors.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-import 'signup.dart';
+import 'signin.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -135,7 +135,7 @@ class WelcomePage extends StatelessWidget {
                     onPressed: () {
                       Navigator.pushReplacement(
                         context,
-                        MaterialPageRoute(builder: (context) => SignUpScreen()),
+                        MaterialPageRoute(builder: (context) => SignInScreen()),
                       );
                     },
 

@@ -6,6 +6,7 @@ import 'profile.dart';
 
 import 'dart:convert';
 import 'package:savourai/models/recipe_model.dart';
+import 'package:savourai/models/cookbook_model.dart';
 import 'package:savourai/services/gemini_service.dart';
 import 'package:savourai/widgets/recipe_card.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,7 +17,6 @@ import '../providers/shoppinglist_firestore_provider.dart';
 import '../models/shopping_list_model.dart';
 import '../providers/saved_recipes_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
-import '../models/cookbook_model.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

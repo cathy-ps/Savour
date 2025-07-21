@@ -1,10 +1,12 @@
+import 'package:flutter/material.dart';
+
 import '../constant/colors.dart';
 import '../providers/shoppinglist_firestore_provider.dart';
 import '../models/shopping_list_model.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:savourai/models/cookbook_model.dart';
+import '../providers/cookbooks_provider.dart';
 import 'package:savourai/models/recipe_model.dart';
 import 'package:savourai/widgets/recipe_card.dart';
 import '../providers/saved_recipes_provider.dart';
@@ -41,6 +43,46 @@ class CookbookDetailScreen extends ConsumerWidget {
         backgroundColor: AppColors.primary,
         foregroundColor: AppColors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            tooltip: 'Delete Cookbook',
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (ctx) => AlertDialog(
+                  title: const Text('Delete Cookbook'),
+                  content: const Text(
+                    'Are you sure you want to delete this cookbook? This cannot be undone.',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(ctx).pop(true),
+                      child: const Text(
+                        'Delete',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true) {
+                final notifier = ref.read(cookbookActionsProvider.notifier);
+                await notifier.deleteCookbook(cookbook.id);
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Cookbook deleted.')),
+                  );
+                }
+              }
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<Recipe>>(
         future: _fetchRecipes(),

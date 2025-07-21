@@ -77,8 +77,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     ref.listen(authStateProvider, (previous, next) {
       next.whenData((user) {
         if (user != null && mounted) {
-          Navigator.pushReplacement(
-            context,
+          Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const RootNavigation()),
           );
         }

@@ -20,6 +20,8 @@ class _CreateCookbookDialogState extends State<CreateCookbookDialog> {
   Color? _selectedColor;
   late final List<Color> _colors;
 
+  //get Navigator => null;
+
   @override
   void initState() {
     super.initState();
@@ -140,7 +142,7 @@ class _CreateCookbookDialogState extends State<CreateCookbookDialog> {
                   final title = _controller.text.trim();
                   if (title.isNotEmpty && _selectedColor != null) {
                     widget.onCreate(title, _selectedColor!);
-                    Navigator.of(context).pop();
+                    //Navigator.of(context).pop();
                   }
                 },
                 child: const Text('Create'),

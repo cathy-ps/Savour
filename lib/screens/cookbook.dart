@@ -8,8 +8,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:savourai/models/cookbook_model.dart';
 import 'package:savourai/widgets/create_cookbook.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:shadcn_ui/src/utils/border.dart';
-import 'package:shadcn_ui/src/components/form/fields/input.dart';
 
 class CookbookScreen extends StatefulWidget {
   const CookbookScreen({super.key});
@@ -46,6 +44,8 @@ class _CookbookScreenState extends State<CookbookScreen> {
     const Color(0xFFFFFDE7), // Muted Cream
     const Color(0xFFFFCDD2), // Muted Red
   ];
+
+  //get Navigator => null;
 
   @override
   void initState() {

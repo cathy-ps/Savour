@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../models/cookbook_model.dart';
 import 'package:flutter/cupertino.dart';
-import '../constant/colors.dart';
+import 'package:savourai/constant/colors.dart';
+import 'package:savourai/models/cookbook_model.dart';
 
 class CookbookSelectorDialog extends StatelessWidget {
   final List<Cookbook> cookbooks;
@@ -15,6 +15,90 @@ class CookbookSelectorDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    //     return Padding(
+    //       padding: EdgeInsets.symmetric(horizontal: 32, vertical: 32),
+    //       child: Column(
+    //         mainAxisSize: MainAxisSize.min,
+    //         children: [
+    //           Center(
+    //             child: Container(
+    //               width: 40,
+    //               height: 4,
+    //               margin: const EdgeInsets.only(bottom: 16),
+    //               decoration: BoxDecoration(
+    //                 color: Colors.grey[300],
+    //                 borderRadius: BorderRadius.circular(2),
+    //               ),
+    //             ),
+    //           ),
+    //           Text('Select a Cookbook', style: ShadTheme.of(context).textTheme.h3),
+    //           const SizedBox(height: 20),
+
+    //           SizedBox(
+    //             width: 320,
+    //             child: GridView.builder(
+    //               shrinkWrap: true,
+    //               itemCount: cookbooks.length,
+    //               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+    //                 crossAxisCount: 3,
+    //                 mainAxisSpacing: 12,
+    //                 crossAxisSpacing: 12,
+    //                 childAspectRatio: 1.1,
+    //               ),
+    //               itemBuilder: (context, i) {
+    //                 final cb = cookbooks[i];
+    //                 final color = Color(cb.color);
+    //                 return GestureDetector(
+    //                   onTap: () => Navigator.of(context).pop(cb.id),
+    //                   child: Container(
+    //                     decoration: BoxDecoration(
+    //                       color: AppColors.card,
+    //                       borderRadius: BorderRadius.circular(12),
+    //                       boxShadow: [
+    //                         BoxShadow(
+    //                           color: AppColors.border.withValues(alpha: .12),
+    //                           blurRadius: 2,
+    //                           offset: const Offset(0, 1),
+    //                         ),
+    //                       ],
+    //                     ),
+    //                     padding: const EdgeInsets.symmetric(
+    //                       vertical: 10,
+    //                       horizontal: 6,
+    //                     ),
+    //                     child: Column(
+    //                       mainAxisAlignment: MainAxisAlignment.center,
+    //                       children: [
+    //                         Icon(
+    //                           CupertinoIcons.folder_fill,
+    //                           size: 32,
+    //                           color: color,
+    //                         ),
+    //                         const SizedBox(height: 6),
+    //                         Text(
+    //                           cb.title,
+    //                           style: const TextStyle(
+    //                             fontWeight: FontWeight.w600,
+    //                             fontSize: 13,
+    //                             color: AppColors.text,
+    //                           ),
+    //                           maxLines: 2,
+    //                           overflow: TextOverflow.ellipsis,
+    //                           textAlign: TextAlign.center,
+    //                         ),
+    //                       ],
+    //                     ),
+    //                   ),
+    //                 );
+    //               },
+    //             ),
+    //           ),
+    //         ],
+    //       ),
+    //     );
+    //   }
+    // }
+
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(

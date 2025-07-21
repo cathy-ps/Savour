@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/shopping_list_model.dart';
+import 'reminder_info_card.dart';
 
 class ShoppingListCard extends StatefulWidget {
   final ShoppingList list;
@@ -58,35 +59,13 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        list.reminder != null
-                            ? Icons.alarm_on
-                            : Icons.alarm_add,
-                        color: list.reminder != null
-                            ? Colors.green
-                            : Colors.grey,
-                      ),
-                      onPressed: widget.onSetReminder,
-                    ),
-                    if (list.reminder != null)
-                      Text(
-                        'Reminder: ${list.reminder!.toLocal().toString().substring(0, 16)}',
-                        style: const TextStyle(
-                          color: Colors.black,
-                          fontWeight: FontWeight.w500,
-                          shadows: [
-                            Shadow(
-                              color: Colors.white54,
-                              offset: Offset(0, 1),
-                              blurRadius: 4,
-                            ),
-                          ],
-                        ),
-                      ),
-                  ],
+                ReminderInfoCard(
+                  reminder: list.reminder,
+                  onClearReminder: () {
+                    setState(() {
+                      list.reminder = null;
+                    });
+                  },
                 ),
                 Row(
                   children: [
@@ -97,13 +76,13 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.black,
-                          shadows: [
-                            Shadow(
-                              color: Colors.black54,
-                              offset: Offset(0, 1),
-                              blurRadius: 4,
-                            ),
-                          ],
+                          // shadows: [
+                          //   Shadow(
+                          //     color: Colors.black54,
+                          //     offset: Offset(0, 1),
+                          //     blurRadius: 4,
+                          //   ),
+                          // ],
                         ),
                       ),
                     ),

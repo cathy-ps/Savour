@@ -25,7 +25,7 @@ class GeminiService {
       final content = Content.text(prompt);
       final response = await _model.generateContent([content]);
       return response.text;
-    } catch (e, st) {
+    } catch (e) {
       print('[GeminiService] Error: $e');
       return null;
     }
@@ -132,8 +132,9 @@ Do not include any text, markdown, or explanation before or after the JSON array
     });
 
     final response = await http.post(url, headers: headers, body: body);
-    if (response.statusCode != 200)
+    if (response.statusCode != 200) {
       throw Exception('Failed to generate recipes');
+    }
     final text =
         jsonDecode(
               response.body,

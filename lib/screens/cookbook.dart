@@ -1,15 +1,15 @@
 import '../constant/colors.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:flutter/cupertino.dart';
 
-import 'package:savourai/models/recipe_model.dart';
-import 'package:savourai/widgets/recipe_card.dart';
 import 'package:savourai/screens/cookbook_detail.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:savourai/models/cookbook_model.dart';
-import 'package:savourai/widgets/custom_search_bar.dart';
-import 'package:savourai/widgets/create_cookbook_dialog.dart';
+import 'package:savourai/widgets/create_cookbook.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shadcn_ui/src/utils/border.dart';
+import 'package:shadcn_ui/src/components/form/fields/input.dart';
 
 class CookbookScreen extends StatefulWidget {
   const CookbookScreen({super.key});
@@ -19,6 +19,8 @@ class CookbookScreen extends StatefulWidget {
 }
 
 class _CookbookScreenState extends State<CookbookScreen> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = '';
   void _openCookbookRecipes(Cookbook cookbook) {
     Navigator.of(context).push(
       MaterialPageRoute(
@@ -33,12 +35,16 @@ class _CookbookScreenState extends State<CookbookScreen> {
   String? _error;
   String? _userId;
   final List<Color> _colorOptions = [
-    AppColors.primary,
-    AppColors.secondary,
-    AppColors.card,
-    AppColors.success,
-    AppColors.error,
-    AppColors.muted,
+    const Color(0xFFF8BBD0), // Muted Pink
+    const Color(0xFFFFE0B2), // Muted Orange
+    const Color(0xFFFFF9C4), // Muted Yellow
+    const Color(0xFFC8E6C9), // Muted Green
+    const Color(0xFFB3E5FC), // Muted Blue
+    const Color(0xFFD1C4E9), // Muted Purple
+    const Color(0xFFD7CCC8), // Muted Brown
+    const Color(0xFFCFD8DC), // Muted Blue Grey
+    const Color(0xFFFFFDE7), // Muted Cream
+    const Color(0xFFFFCDD2), // Muted Red
   ];
 
   @override
@@ -46,6 +52,17 @@ class _CookbookScreenState extends State<CookbookScreen> {
     super.initState();
     _userId = FirebaseAuth.instance.currentUser?.uid;
     _fetchCookbooks();
+    _searchController.addListener(() {
+      setState(() {
+        _searchQuery = _searchController.text.trim();
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _fetchCookbooks() async {
@@ -118,7 +135,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
               decoration: const BoxDecoration(
                 color: AppColors.primary,
                 borderRadius: BorderRadius.only(
@@ -129,31 +146,36 @@ class _CookbookScreenState extends State<CookbookScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Cookbook',
-                    style: TextStyle(
-                      color: AppColors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 18),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Expanded(child: Container()),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.white,
-                          foregroundColor: AppColors.primary,
+                      const Text(
+                        'Cookbook',
+                        style: TextStyle(
+                          color: AppColors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
                         ),
-                        icon: const Icon(Icons.add),
-                        label: const Text('New Cookbook'),
+                      ),
+                      IconButton(
+                        icon: const Icon(
+                          Icons.add,
+                          color: AppColors.white,
+                          size: 28,
+                        ),
                         onPressed: () async {
-                          await showDialog(
+                          await showModalBottomSheet(
                             context: context,
+                            isScrollControlled: true,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(24),
+                              ),
+                            ),
                             builder: (context) => CreateCookbookDialog(
                               colorOptions: _colorOptions,
                               onCreate: (title, color) {
+                                Navigator.of(context).pop();
                                 _addCookbook(title, color);
                               },
                             ),
@@ -161,6 +183,30 @@ class _CookbookScreenState extends State<CookbookScreen> {
                         },
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 16),
+                  ShadInputFormField(
+                    enableInteractiveSelection: false,
+
+                    //autovalidateMode: AutovalidateMode.onUserInteraction,
+                    decoration: ShadDecoration(
+                      color: AppColors.white,
+                      border: ShadBorder.all(
+                        //need to remove the border when the user is typing
+                        radius: BorderRadius.all(Radius.circular(20)),
+                        style: BorderStyle.solid,
+                        color: Colors.transparent, // No visible border
+                      ),
+                    ),
+                    controller: _searchController,
+                    id: 'cookbook_search',
+                    label: const Text(''),
+                    placeholder: const Text('Search cookbooks...'),
+                    leading: const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Icon(Icons.search),
+                    ),
+                    textInputAction: TextInputAction.search,
                   ),
                 ],
               ),
@@ -178,65 +224,81 @@ class _CookbookScreenState extends State<CookbookScreen> {
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: GridView.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 1.1,
-                        ),
-                    itemCount: _cookbooks.length,
-                    itemBuilder: (context, index) {
-                      final cb = _cookbooks[index];
-                      final color = Color(
-                        (cb.toJson()['color'] ?? AppColors.primary.value)
-                            as int,
-                      );
-                      return GestureDetector(
-                        onTap: () => _openCookbookRecipes(cb),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: AppColors.card,
-                            borderRadius: BorderRadius.circular(18),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppColors.border.withOpacity(0.2),
-                                blurRadius: 4,
-                                offset: Offset(0, 2),
+                  child: Builder(
+                    builder: (context) {
+                      final filteredCookbooks = _searchQuery.isEmpty
+                          ? _cookbooks
+                          : _cookbooks
+                                .where(
+                                  (cb) => cb.title.toLowerCase().contains(
+                                    _searchQuery.toLowerCase(),
+                                  ),
+                                )
+                                .toList();
+                      if (filteredCookbooks.isEmpty) {
+                        return const Center(child: Text('No cookbooks found.'));
+                      }
+                      return GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              crossAxisSpacing: 12,
+                              mainAxisSpacing: 12,
+                              childAspectRatio: 1.1,
+                            ),
+                        itemCount: filteredCookbooks.length,
+                        itemBuilder: (context, index) {
+                          final cb = filteredCookbooks[index];
+                          final color = Color(
+                            (cb.toJson()['color'] ?? AppColors.primary.value)
+                                as int,
+                          );
+                          return GestureDetector(
+                            onTap: () => _openCookbookRecipes(cb),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: AppColors.card,
+                                borderRadius: BorderRadius.circular(18),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.border.withOpacity(0.2),
+                                    blurRadius: 4,
+                                    offset: Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                CupertinoIcons.folder_fill,
-                                size: 54,
-                                color: color,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    CupertinoIcons.folder_fill,
+                                    size: 54,
+                                    color: color,
+                                  ),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    cb.title,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                      color: AppColors.text,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${cb.recipeCount} recipes',
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: AppColors.muted,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(height: 10),
-                              Text(
-                                cb.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
-                                  color: AppColors.text,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                '${cb.recipeCount} recipes',
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  color: AppColors.muted,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                            ),
+                          );
+                        },
                       );
                     },
                   ),

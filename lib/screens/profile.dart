@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:savourai/screens/auth/welcome.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 import '../providers/user_profile_provider.dart';
+import 'package:savourai/constant/colors.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -11,9 +14,10 @@ class ProfileScreen extends ConsumerWidget {
     final userProfile = ref.watch(userProfileProvider);
     return Scaffold(
       body: userProfile.when(
-        data: (profile) {
-          final name = profile?['name'] ?? 'No Name';
-          final email = profile?['email'] ?? 'No Email';
+        data: (user) {
+          final name = user?.name ?? 'No Name';
+          final email = user?.email ?? 'No Email';
+          final dietaryPreferences = user?.dietaryPreferences ?? [];
           return Stack(
             children: [
               Column(
@@ -27,7 +31,7 @@ class ProfileScreen extends ConsumerWidget {
                       bottom: 24,
                     ),
                     decoration: const BoxDecoration(
-                      color: Color(0xFF4B3DFE),
+                      color: AppColors.primary,
                       borderRadius: BorderRadius.only(
                         bottomLeft: Radius.circular(32),
                         bottomRight: Radius.circular(32),
@@ -41,7 +45,7 @@ class ProfileScreen extends ConsumerWidget {
                           backgroundColor: Colors.white,
                           child: Icon(
                             Icons.person,
-                            color: Color(0xFF4B3DFE),
+                            color: AppColors.darkGrey,
                             size: 40,
                           ),
                         ),
@@ -76,7 +80,44 @@ class ProfileScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  // ...rest of the profile page...
+                  // Dietary Preferences Section
+                  if (dietaryPreferences.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Dietary Preferences',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Wrap(
+                            spacing: 8,
+                            children: dietaryPreferences
+                                .map((pref) => Chip(label: Text(pref)))
+                                .toList(),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (dietaryPreferences.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 16,
+                      ),
+                      child: Text(
+                        'No dietary preferences set.',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                    ),
                   const Expanded(child: SizedBox()),
                 ],
               ),
@@ -86,24 +127,60 @@ class ProfileScreen extends ConsumerWidget {
                 bottom: 24,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      minimumSize: const Size.fromHeight(48),
-                      backgroundColor: Colors.redAccent,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                    ),
-                    icon: const Icon(Icons.logout, color: Colors.white),
-                    label: const Text(
-                      'Sign Out',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
-                    ),
+                  child: ShadButton.destructive(
                     onPressed: () async {
-                      await FirebaseAuth.instance.signOut();
-                      Navigator.of(context).popUntil((route) => route.isFirst);
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (context) => ShadDialog(
+                          title: const Text('Sign Out'),
+                          description: const Text(
+                            'Are you sure you want to sign out?',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.of(context).pop(true),
+                              child: const Text(
+                                'Sign Out',
+                                style: TextStyle(color: AppColors.error),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await FirebaseAuth.instance.signOut();
+                        Navigator.of(context).pushAndRemoveUntil(
+                          MaterialPageRoute(
+                            builder: (context) => const WelcomePage(),
+                          ),
+                          (route) => false,
+                        );
+                      }
                     },
+                    child: const Text('Sign Out'),
                   ),
+                  // child: ElevatedButton.icon(
+                  //   style: ElevatedButton.styleFrom(
+                  //     minimumSize: const Size.fromHeight(48),
+                  //     backgroundColor: Colors.redAccent,
+                  //     shape: RoundedRectangleBorder(
+                  //       borderRadius: BorderRadius.circular(16),
+                  //     ),
+                  //   ),
+                  //   icon: const Icon(Icons.logout, color: Colors.white),
+                  //   label: const Text(
+                  //     'Sign Out',
+                  //     style: TextStyle(color: Colors.white, fontSize: 16),
+                  //   ),
+                  //   onPressed: () async {
+                  //     await FirebaseAuth.instance.signOut();
+                  //     Navigator.of(context).popUntil((route) => route.isFirst);
+                  //   },
+                  // ),
                 ),
               ),
             ],

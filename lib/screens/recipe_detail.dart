@@ -1,3 +1,5 @@
+import 'package:shadcn_ui/shadcn_ui.dart';
+
 import '../constant/colors.dart';
 import '../providers/shoppinglist_firestore_provider.dart';
 import '../models/shopping_list_model.dart';
@@ -157,12 +159,11 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    if (_recipe!.imageUrl != null &&
-                        _recipe!.imageUrl!.isNotEmpty)
+                    if (_recipe!.imageUrl.isNotEmpty)
                       ClipRRect(
                         borderRadius: BorderRadius.circular(18),
                         child: Image.network(
-                          _recipe!.imageUrl!,
+                          _recipe!.imageUrl,
                           width: double.infinity,
                           height: 200,
                           fit: BoxFit.cover,
@@ -177,24 +178,23 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                         color: AppColors.text,
                       ),
                     ),
-                    if (_recipe!.cookingDuration != null)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 6, bottom: 12),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.timer,
-                              size: 18,
-                              color: AppColors.muted,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              '${_recipe!.cookingDuration} min',
-                              style: const TextStyle(color: AppColors.muted),
-                            ),
-                          ],
-                        ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 6, bottom: 12),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.timer,
+                            size: 18,
+                            color: AppColors.muted,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            '${_recipe!.cookingDuration} min',
+                            style: const TextStyle(color: AppColors.muted),
+                          ),
+                        ],
                       ),
+                    ),
                     const SizedBox(height: 10),
                     Text(
                       'Ingredients',
@@ -299,9 +299,24 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                                 reminder: null,
                               );
                               await addShoppingList(shoppingList);
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Added to shopping list!'),
+                              if (!mounted) return;
+                              ShadToaster.of(context).show(
+                                ShadToast(
+                                  description: const Text(
+                                    'Added to shopping list!',
+                                  ),
+                                  action: ShadButton.outline(
+                                    child: const Text('View List'),
+                                    onPressed: () {
+                                      Navigator.of(
+                                        context,
+                                      ).pop(); // Close the toast if needed
+                                      Navigator.pushNamed(
+                                        context,
+                                        '/shoppinglist',
+                                      );
+                                    },
+                                  ),
                                 ),
                               );
                             },

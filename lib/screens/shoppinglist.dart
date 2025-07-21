@@ -76,84 +76,84 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
               if (shoppingLists.isEmpty) {
                 return const Center(child: Text('No shopping lists.'));
               }
-              return Expanded(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 16),
-                    SizedBox(
-                      height: 260,
-                      child: PageView.builder(
-                        controller: _pageController,
-                        itemCount: shoppingLists.length,
-                        onPageChanged: (i) => setState(() => _currentPage = i),
-                        itemBuilder: (context, index) {
-                          final list = shoppingLists[index];
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                            child: ShoppingListCard(
-                              list: list,
-                              onDelete: () async {
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Delete Shopping List'),
-                                    content: const Text(
-                                      'Are you sure you want to delete this shopping list?',
+              return Column(
+                children: [
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: shoppingLists.length,
+                      onPageChanged: (i) => setState(() => _currentPage = i),
+                      itemBuilder: (context, index) {
+                        final list = shoppingLists[index];
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          child: ShoppingListCard(
+                            list: list,
+                            onDelete: () async {
+                              final confirm = await showDialog<bool>(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: const Text('Delete Shopping List'),
+                                  content: const Text(
+                                    'Are you sure you want to delete this shopping list?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
+                                      child: const Text('Cancel'),
                                     ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(false),
-                                        child: const Text('Cancel'),
-                                      ),
-                                      TextButton(
-                                        onPressed: () =>
-                                            Navigator.of(context).pop(true),
-                                        child: const Text(
-                                          'Delete',
-                                          style: TextStyle(color: AppColors.error),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
+                                      child: const Text(
+                                        'Delete',
+                                        style: TextStyle(
+                                          color: AppColors.error,
                                         ),
                                       ),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  await deleteShoppingList(list.id);
-                                }
-                              },
-                              onSetReminder: () async {
-                                await _setReminder(
-                                  context,
-                                  list.id,
-                                  list.reminder,
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(
-                        shoppingLists.length,
-                        (i) => Container(
-                          width: 10,
-                          height: 10,
-                          margin: const EdgeInsets.symmetric(horizontal: 4),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: i == _currentPage
-                                ? AppColors.primary
-                                : AppColors.card,
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true) {
+                                await deleteShoppingList(list.id);
+                              }
+                            },
+                            onSetReminder: () async {
+                              await _setReminder(
+                                context,
+                                list.id,
+                                list.reminder,
+                              );
+                            },
                           ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+
+                    // Display page indicators
+                    children: List.generate(
+                      shoppingLists.length,
+                      (i) => Container(
+                        width: 10,
+                        height: 10,
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: i == _currentPage
+                              ? AppColors.primary
+                              : AppColors.muted,
                         ),
                       ),
                     ),
-                    // ...add button, etc.
-                  ],
-                ),
+                  ),
+                ],
               );
             },
           ),
@@ -161,6 +161,4 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       },
     );
   }
-
-  // (All mock data and duplicate widget code removed. Only Firestore-based implementation remains.)
 }

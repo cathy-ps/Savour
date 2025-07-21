@@ -16,6 +16,7 @@ import '../providers/shoppinglist_firestore_provider.dart';
 import '../models/shopping_list_model.dart';
 import '../providers/saved_recipes_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
+import '../models/cookbook_model.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -33,7 +34,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final GeminiService _geminiService = GeminiService();
   // Cookbook and favorite state
   List<Cookbook> _userCookbooks = [];
-  Map<String, List<String>> _cookbookRecipeIds =
+  final Map<String, List<String>> _cookbookRecipeIds =
       {}; // cookbookId -> List<recipeId>
   String? _userId; // Set this to the current user's ID
 

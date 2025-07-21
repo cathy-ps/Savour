@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'auth/signin.dart';
+import 'screens/auth/signin.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({super.key});

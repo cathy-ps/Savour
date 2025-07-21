@@ -55,6 +55,7 @@ dependencies:
   shared_preferences: ^2.2.2
   salomon_bottom_bar: ^3.3.2
   fluttertoast: ^8.2.12
+  modular_ui: ^0.0.5
 
 dev_dependencies:
   flutter_test:
@@ -81,7 +82,9 @@ flutter:
   assets:
     - assets/.env
     - assets/images/avatar.png
-    - assets/images/bg.jpg
+    - assets/images/bg.jpg    
+    - assets/images/list_bg.jpg
+
   # To add assets to your application, add an assets section, like this:
   # assets:
   #   - assets/images/bg.jpg

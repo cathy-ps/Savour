@@ -20,13 +20,17 @@ class GoogleImageSearchService {
       print('[GoogleImageSearchService] Response body: ${response.body}');
       final data = jsonDecode(response.body);
       if (data['items'] != null && data['items'].isNotEmpty) {
-        print('[GoogleImageSearchService] Found image: ${data['items'][0]['link']}');
+        print(
+          '[GoogleImageSearchService] Found image: ${data['items'][0]['link']}',
+        );
         return data['items'][0]['link']; // Image URL
       } else {
         print('[GoogleImageSearchService] No items found in response.');
       }
     } else {
-      print('[GoogleImageSearchService] HTTP ${response.statusCode}: ${response.body}');
+      print(
+        '[GoogleImageSearchService] HTTP ${response.statusCode}: ${response.body}',
+      );
     }
     return null;
   }

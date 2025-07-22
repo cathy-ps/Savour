@@ -15,7 +15,9 @@ import '../providers/user_profile_provider.dart';
 import '../providers/saved_recipes_provider.dart';
 import '../providers/home_search_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
+
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'chatbot_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -443,6 +445,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         //   tooltip: 'Test Notification',
         //   child: const Icon(Icons.notifications_active),
         // ),
+      ),
+
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+          );
+        },
+        child: const Icon(Icons.chat),
+        //tooltip: 'Chat with SavourAI',
       ),
     );
   }

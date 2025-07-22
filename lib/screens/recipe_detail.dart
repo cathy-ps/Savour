@@ -4,6 +4,7 @@ import '../constant/colors.dart';
 import '../providers/shoppinglist_firestore_provider.dart';
 import '../models/shopping_list_model.dart';
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/recipe_model.dart';
@@ -153,7 +154,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
     return Scaffold(
       appBar: CustomAppBar(
         title: '',
-        //titleColor: AppColors.white,
         elevation: 0,
         actions: [
           IconButton(
@@ -203,6 +203,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                           nutrition: _recipe!.nutrition,
                           imageUrl: _recipe!.imageUrl,
                           isFavorite: true,
+                          videoUrl: _recipe!.videoUrl,
                         );
                         await _saveToCookbook(updatedRecipe);
                         setState(() {}); // Force UI update
@@ -424,6 +425,72 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                         ),
                       ],
                     ),
+                    // Video Tutorial Section
+                    if (_recipe!.videoUrl != null &&
+                        _recipe!.videoUrl!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 32.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Video Tutorial',
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                                color: AppColors.text,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            GestureDetector(
+                              onTap: () async {
+                                final url = Uri.parse(_recipe!.videoUrl!);
+                                if (await canLaunchUrl(url)) {
+                                  await launchUrl(
+                                    url,
+                                    mode: LaunchMode.externalApplication,
+                                  );
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red[50],
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.redAccent.withOpacity(0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.play_circle_fill,
+                                      color: Colors.redAccent,
+                                      size: 32,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'Watch on YouTube',
+                                        style: TextStyle(
+                                          color: Colors.redAccent[700],
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.open_in_new,
+                                      color: Colors.redAccent,
+                                      size: 20,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                   ],
                 ),
               ),

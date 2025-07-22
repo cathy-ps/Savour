@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/recipe_model.dart';
+import 'youtube_search_service.dart';
 
 // Helper to fetch a food image from Pexels API
 Future<String?> fetchPexelsImage(String query, String apiKey) async {
@@ -20,6 +21,22 @@ Future<String?> fetchPexelsImage(String query, String apiKey) async {
 }
 
 class GeminiService {
+  YoutubeSearchService? _youtubeService;
+
+  void setYoutubeApiKey(String apiKey) {
+    _youtubeService = YoutubeSearchService(apiKey);
+  }
+
+  Future<String?> _getValidYoutubeUrl(String title, String? url) async {
+    final isValid =
+        url != null &&
+        (url.startsWith('https://www.youtube.com/watch?v=') ||
+            url.startsWith('https://youtu.be/'));
+    if (isValid) return url;
+    if (_youtubeService == null) return null;
+    return await _youtubeService!.searchFirstVideoUrl(title);
+  }
+
   Future<String?> generateText(String prompt) async {
     try {
       final content = Content.text(prompt);
@@ -43,6 +60,7 @@ class GeminiService {
     List<String> ingredients, {
     String? cuisine,
     String? dietaryNotes,
+    String? youtubeApiKey,
   }) async {
     final prompt =
         '''
@@ -59,11 +77,12 @@ Return the recipes as a JSON array. Each recipe must be a JSON object with these
 - ingredients (array of objects: { name, quantity, unit })
 - instructions (array of strings, step-by-step)
 - nutrition (object: { calories, protein, carbs, fat } per serving, all numbers)
-- videoUrl (string, a YouTube link to a video tutorial for this recipe)
+- videoUrl (string, please search the recipe title on YouTube and provide a YouTube link, ensure it is a valid YouTube URL)
 
 Make sure the ingredient list and quantities are for 1 serving and scalable. Do not include any ingredients outside the provided list and common pantry items. Format the output as a valid JSON array, no extra text.
 ''';
     try {
+      if (youtubeApiKey != null) setYoutubeApiKey(youtubeApiKey);
       final content = Content.text(prompt);
       final response = await _model.generateContent([content]);
       final text = response.text;
@@ -79,7 +98,17 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
       }
       final data = jsonDecode(jsonArray);
       if (data is List) {
-        return data.map((e) => Recipe.fromJson(e, '')).toList();
+        // Always search YouTube for the recipe title and assign to videoUrl
+        List<Recipe> recipes = [];
+        for (final e in data) {
+          String title = e['title'] as String? ?? '';
+          String? videoUrl = _youtubeService != null
+              ? await _youtubeService!.searchFirstVideoUrl(title)
+              : null;
+          e['videoUrl'] = videoUrl;
+          recipes.add(Recipe.fromJson(e, ''));
+        }
+        return recipes;
       } else {
         print('[GeminiService] Response was not a List: $data');
         return [];
@@ -94,70 +123,71 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
     }
   }
 
-  Future<List<Recipe>> generateRecipesWithImages({
-    required List<String> ingredients,
-    String? cuisine,
-    String? dietaryNotes,
-    required String apiKey,
-  }) async {
-    final prompt =
-        '''
-You are a recipe generator. Based on the following criteria, generate a random number of recipes, between 3 and 10.
-- Must-have ingredients: ${ingredients.isNotEmpty ? ingredients.join(', ') : 'any common pantry items'}.
-- Cuisine style: ${cuisine ?? 'any'}.
-- Dietary considerations: ${dietaryNotes ?? 'none'}.
+  //   Future<List<Recipe>> generateRecipesWithImages({
+  //     required List<String> ingredients,
+  //     String? cuisine,
+  //     String? dietaryNotes,
+  //     required String apiKey,
+  //   }) async {
+  //     final prompt =
+  //         '''
+  // You are a recipe generator. Based on the following criteria, generate a random number of recipes, between 3 and 10.
+  // - Must-have ingredients: ${ingredients.isNotEmpty ? ingredients.join(', ') : 'any common pantry items'}.
+  // - Cuisine style: ${cuisine ?? 'any'}.
+  // - Dietary considerations: ${dietaryNotes ?? 'none'}.
 
-For each recipe, provide all the requested details. Be creative and make the recipes sound delicious.
-If the ingredients are sparse, feel free to supplement with common pantry staples.
-Ensure the instructions are clear and easy to follow.
+  // For each recipe, provide all the requested details. Be creative and make the recipes sound delicious.
+  // If the ingredients are sparse, feel free to supplement with common pantry staples.
+  // Ensure the instructions are clear and easy to follow.
 
-Each recipe must also include a field called videoUrl, which is a YouTube link to a video tutorial for this recipe (or null if not available).
+  // Each recipe must also include a field called videoUrl, which is a YouTube link to a video tutorial for this recipe (or null if not available).
 
-Do not include any text, markdown, or explanation before or after the JSON array. Only output the JSON array.
-''';
+  // Do not include any text, markdown, or explanation before or after the JSON array. Only output the JSON array.
+  // ''';
 
-    // Call Gemini API (text generation)
-    final url = Uri.parse(
-      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-    );
-    final headers = {
-      'Content-Type': 'application/json',
-      'X-goog-api-key': apiKey,
-    };
-    final body = jsonEncode({
-      "contents": [
-        {
-          "parts": [
-            {"text": prompt},
-          ],
-        },
-      ],
-    });
+  //     // Call Gemini API (text generation)
+  //     final url = Uri.parse(
+  //       'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
+  //     );
+  //     final headers = {
+  //       'Content-Type': 'application/json',
+  //       'X-goog-api-key': apiKey,
+  //     };
+  //     final body = jsonEncode({
+  //       "contents": [
+  //         {
+  //           "parts": [
+  //             {"text": prompt},
+  //           ],
+  //         },
+  //       ],
+  //     });
 
-    final response = await http.post(url, headers: headers, body: body);
-    if (response.statusCode != 200) {
-      throw Exception('Failed to generate recipes');
-    }
-    final text =
-        jsonDecode(
-              response.body,
-            )['candidates'][0]['content']['parts'][0]['text']
-            as String;
+  //     final response = await http.post(url, headers: headers, body: body);
+  //     if (response.statusCode != 200) {
+  //       throw Exception('Failed to generate recipes');
+  //     }
+  //     final text =
+  //         jsonDecode(
+  //               response.body,
+  //             )['candidates'][0]['content']['parts'][0]['text']
+  //             as String;
 
-    // Extract the first valid JSON array from the response
-    String? jsonArray;
-    final arrayStart = text.indexOf('[');
-    final arrayEnd = text.lastIndexOf(']');
-    if (arrayStart != -1 && arrayEnd != -1 && arrayEnd > arrayStart) {
-      jsonArray = text.substring(arrayStart, arrayEnd + 1);
-    } else {
-      jsonArray = '[]';
-    }
+  //     // Extract the first valid JSON array from the response
+  //     String? jsonArray;
+  //     final arrayStart = text.indexOf('[');
+  //     final arrayEnd = text.lastIndexOf(']');
+  //     if (arrayStart != -1 && arrayEnd != -1 && arrayEnd > arrayStart) {
+  //       jsonArray = text.substring(arrayStart, arrayEnd + 1);
+  //     } else {
+  //       jsonArray = '[]';
+  //     }
 
-    // Parse recipes
-    List<dynamic> jsonList = jsonDecode(jsonArray);
-    List<Recipe> recipes = jsonList.map((e) => Recipe.fromJson(e, '')).toList();
+  //     // Parse recipes
+  //     List<dynamic> jsonList = jsonDecode(jsonArray);
+  //     List<Recipe> recipes = jsonList.map((e) => Recipe.fromJson(e, '')).toList();
 
-    return recipes;
-  }
+  //     return recipes;
+  //   }
+  // }
 }

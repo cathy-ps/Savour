@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/recipe_model.dart';
 import '../services/gemini_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:convert';
 
 class HomeSearchState {
@@ -55,7 +56,11 @@ class HomeSearchNotifier extends StateNotifier<HomeSearchState> {
           .map((e) => e.trim())
           .where((e) => e.isNotEmpty)
           .toList();
-      final recipes = await _geminiService.generateRecipes(ingredients);
+      final youtubeApiKey = dotenv.env['youtube_api_key'];
+      final recipes = await _geminiService.generateRecipes(
+        ingredients,
+        youtubeApiKey: youtubeApiKey,
+      );
       state = state.copyWith(
         recipes: recipes,
         rawResult: recipes.isNotEmpty

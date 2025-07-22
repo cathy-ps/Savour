@@ -72,20 +72,18 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-                  decoration: const BoxDecoration(
-                    color: AppColors.primary,
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(24),
-                      bottomRight: Radius.circular(24),
-                    ),
-                  ),
-                  child: const Text(
-                    'Shopping Lists',
-                    style: TextStyle(
-                      color: AppColors.white,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Shopping Lists',
+                        style: TextStyle(
+                          color: AppColors.black,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 Expanded(
@@ -110,7 +108,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                 final list = shoppingLists[index];
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
+                                    horizontal: 10,
                                   ),
                                   child: ShoppingListCard(
                                     list: list,

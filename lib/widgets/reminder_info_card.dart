@@ -30,19 +30,28 @@ class ReminderInfoCard extends StatelessWidget {
       return '$day/$month/$year, $hour:$minute $ampm';
     }
 
+    final now = DateTime.now();
+    final isOverdue = reminder!.isBefore(now);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: ShadCard(
         padding: const EdgeInsets.all(8),
         title: Row(
           children: [
-            const Icon(Icons.alarm, color: Colors.grey, size: 16),
+            Icon(
+              isOverdue ? Icons.error_outline : Icons.alarm,
+              color: isOverdue ? Colors.red : Colors.grey,
+              size: 16,
+            ),
             const SizedBox(width: 4),
             Expanded(
               child: Text(
-                'Reminder Set for: \n${formatDate(reminder!)}',
-                style: const TextStyle(
-                  color: Colors.black87,
+                isOverdue
+                    ? 'Overdue!'
+                    : 'Reminder Set for: \n${formatDate(reminder!)}',
+                style: TextStyle(
+                  color: isOverdue ? Colors.red : Colors.black87,
                   fontWeight: FontWeight.w400,
                   fontSize: 13,
                 ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:savourai/constant/colors.dart';
 import '../models/shopping_list_model.dart';
 import 'reminder_info_card.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -165,17 +166,18 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
               child: Stack(
                 children: [
                   // Background image from assets
-                  SizedBox.expand(
-                    child: Image.asset(
-                      'assets/images/list_bg.jpg',
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) =>
-                          Container(color: Colors.grey[300]),
-                    ),
-                  ),
+                  // SizedBox.expand(
+                  //   child: Image.asset(
+                  //     'assets/images/list_bg.jpg',
+                  //     fit: BoxFit.cover,
+                  //     errorBuilder: (context, error, stackTrace) =>
+                  //         Container(color: Colors.grey[300]),
+                  //   ),
+                  // ),
                   // Overlay for readability
                   Container(
                     decoration: BoxDecoration(
+                      color: AppColors.muted.withValues(alpha: 0.6),
                       borderRadius: BorderRadius.circular(14),
                     ),
                   ),

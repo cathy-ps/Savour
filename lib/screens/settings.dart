@@ -131,6 +131,22 @@ class SettingsScreen extends ConsumerWidget {
               // More Section
               const _SectionHeader(title: 'Others'),
               _SettingsTile(
+                title: 'Offline Recipes',
+                onTap: () async {
+                  // final newPrefs = await showDialog<List<String>>(
+                  //   context: context,
+                  //   builder: (context) => SetDietaryPreferencesDialog(
+                  //     initialPreferences: user?.dietaryPreferences ?? [],
+                  //   ),
+                  // );
+                  // if (newPrefs != null) {
+                  //   await updateUserDietaryPreferences(newPrefs);
+                  //   ref.invalidate(userProfileProvider);
+                  // }
+                },
+              ),
+
+              _SettingsTile(
                 title: 'About Savour',
                 onTap: () async {
                   showModalBottomSheet(

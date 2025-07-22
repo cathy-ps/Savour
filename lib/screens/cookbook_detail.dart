@@ -10,6 +10,7 @@ import '../providers/cookbooks_provider.dart';
 import 'package:savourai/models/recipe_model.dart';
 import 'package:savourai/widgets/recipe_card.dart';
 import '../providers/saved_recipes_provider.dart';
+import '../utils/favorite_handler.dart';
 import 'package:savourai/screens/recipe_detail.dart';
 import 'package:savourai/widgets/custom_app_bar.dart';
 
@@ -65,7 +66,7 @@ class CookbookDetailScreen extends ConsumerWidget {
                       onPressed: () => Navigator.of(ctx).pop(true),
                       child: const Text(
                         'Delete',
-                        style: TextStyle(color: Colors.red),
+                        style: TextStyle(color: AppColors.error),
                       ),
                     ),
                   ],
@@ -113,7 +114,6 @@ class CookbookDetailScreen extends ConsumerWidget {
                 final recipe = recipes[index];
                 final id =
                     (recipe as dynamic).id ?? recipe.title.hashCode.toString();
-                final isFavorite = savedIds.contains(id);
                 return Column(
                   children: [
                     InkWell(
@@ -132,33 +132,21 @@ class CookbookDetailScreen extends ConsumerWidget {
                       },
                       child: RecipeCard(
                         recipe: recipe,
-                        isFavorite: isFavorite,
+                        isFavorite:
+                            true, // Always red heart for recipes in this cookbook
                         onFavoriteTap: () async {
-                          final savedIdsNotifier = ref.read(
-                            savedRecipeIdsProvider.notifier,
+                          await handleFavoriteTap(
+                            context: context,
+                            ref: ref,
+                            recipe: recipe,
+                            userId: userId,
+                            cookbookRecipeIds: {
+                              cookbookDocId: [id],
+                            },
+                            userCookbooks: [cookbook],
+                            userCookbookDocIds: [cookbookDocId],
+                            showSelector: false,
                           );
-                          final recipeRef = FirebaseFirestore.instance
-                              .collection('users')
-                              .doc(userId)
-                              .collection('cookbooks')
-                              .doc(cookbookDocId)
-                              .collection('recipes')
-                              .doc(id);
-                          if (isFavorite) {
-                            await recipeRef.delete();
-                            savedIdsNotifier.update((state) {
-                              final newSet = Set<String>.from(state);
-                              newSet.remove(id);
-                              return newSet;
-                            });
-                          } else {
-                            await recipeRef.set(recipe.toJson());
-                            savedIdsNotifier.update((state) {
-                              final newSet = Set<String>.from(state);
-                              newSet.add(id);
-                              return newSet;
-                            });
-                          }
                         },
                       ),
                     ),

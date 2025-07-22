@@ -15,9 +15,7 @@ import '../providers/user_profile_provider.dart';
 import '../providers/saved_recipes_provider.dart';
 import '../providers/home_search_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
-//import '../services/reminder_service.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-//import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

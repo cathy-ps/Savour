@@ -9,6 +9,7 @@ import 'package:savourai/models/cookbook_model.dart';
 import 'package:savourai/widgets/create_cookbook.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:savourai/widgets/custom_search_bar.dart';
+import 'package:cupertino_icons/cupertino_icons.dart';
 
 class CookbookScreen extends StatefulWidget {
   const CookbookScreen({super.key});
@@ -18,6 +19,7 @@ class CookbookScreen extends StatefulWidget {
 }
 
 class _CookbookScreenState extends State<CookbookScreen> {
+  String _sortBy = 'date'; // 'date' or 'title'
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
   void _openCookbookRecipes(Cookbook cookbook, String cookbookDocId) {
@@ -135,7 +137,6 @@ class _CookbookScreenState extends State<CookbookScreen> {
     final newCookbook = Cookbook(
       id: newDoc.id,
       title: capitalizedTitle,
-      //title: title,
       createdAt: DateTime.now(),
       recipeCount: 0,
       color: color.value,
@@ -145,7 +146,6 @@ class _CookbookScreenState extends State<CookbookScreen> {
     final messenger = ShadToaster.maybeOf(context);
     if (messenger != null) {
       messenger.show(
-        //ShadToast(description: Text('Cookbook "$title" has been created')),
         ShadToast(
           description: Text('Cookbook "$capitalizedTitle" has been created'),
         ),
@@ -212,21 +212,70 @@ class _CookbookScreenState extends State<CookbookScreen> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  CustomSearchBar(
-                    hintIcon: const Icon(Icons.search, size: 20),
-                    controller: _searchController,
-                    hintText: 'Search cookbooks...',
-                    //submitIcon: const Icon(Icons.search),
-                    // onChanged: (val) {
-                    //   setState(() {
-                    //     _searchQuery = val.trim();
-                    //   });
-                    // },
-                    onSubmit: () {
-                      setState(() {
-                        _searchQuery = _searchController.text.trim();
-                      });
-                    },
+                  Row(
+                    children: [
+                      Expanded(
+                        child: CustomSearchBar(
+                          hintIcon: const Icon(Icons.search, size: 20),
+                          controller: _searchController,
+                          hintText: 'Search cookbooks...',
+                          onSubmit: () {
+                            setState(() {
+                              _searchQuery = _searchController.text.trim();
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            DropdownButton<String>(
+                              value: _sortBy,
+                              icon: Icon(
+                                CupertinoIcons.arrow_up_arrow_down_circle,
+                              ),
+                              underline: Container(),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.text,
+                              ),
+                              borderRadius: BorderRadius.circular(10),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'date',
+                                  child: Text('Newest'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'title',
+                                  child: Text('A-Z'),
+                                ),
+                              ],
+                              onChanged: (val) {
+                                if (val != null) {
+                                  setState(() {
+                                    _sortBy = val;
+                                  });
+                                }
+                              },
+                            ),
+                            const SizedBox(width: 4),
+                            // IconButton(
+                            //   icon: Icon(_sortBy == 'title' ? CupertinoIcons.arrow_up_down : CupertinoIcons.arrow_up_down),
+                            //   tooltip: 'Toggle sort direction',
+                            //   onPressed: () {
+                            //     setState(() {
+                            //       // Toggle sort direction (ascending/descending)
+                            //       _cookbooks = _cookbooks.reversed.toList();
+                            //     });
+                            //   },
+                            // ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -259,6 +308,40 @@ class _CookbookScreenState extends State<CookbookScreen> {
                           filteredCookbooks.add(cb);
                           filteredDocIds.add(_cookbookDocIds[i]);
                         }
+                      }
+                      // Sort after filtering
+                      if (_sortBy == 'title') {
+                        final zipped = List.generate(
+                          filteredCookbooks.length,
+                          (i) =>
+                              MapEntry(filteredCookbooks[i], filteredDocIds[i]),
+                        );
+                        zipped.sort(
+                          (a, b) => a.key.title.toLowerCase().compareTo(
+                            b.key.title.toLowerCase(),
+                          ),
+                        );
+                        filteredCookbooks
+                          ..clear()
+                          ..addAll(zipped.map((e) => e.key));
+                        filteredDocIds
+                          ..clear()
+                          ..addAll(zipped.map((e) => e.value));
+                      } else if (_sortBy == 'date') {
+                        final zipped = List.generate(
+                          filteredCookbooks.length,
+                          (i) =>
+                              MapEntry(filteredCookbooks[i], filteredDocIds[i]),
+                        );
+                        zipped.sort(
+                          (a, b) => b.key.createdAt.compareTo(a.key.createdAt),
+                        );
+                        filteredCookbooks
+                          ..clear()
+                          ..addAll(zipped.map((e) => e.key));
+                        filteredDocIds
+                          ..clear()
+                          ..addAll(zipped.map((e) => e.value));
                       }
                       if (filteredCookbooks.isEmpty) {
                         return const Center(child: Text('No cookbooks found.'));

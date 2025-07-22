@@ -14,7 +14,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/saved_recipes_provider.dart';
 import '../providers/home_search_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
-import '../services/reminder_service.dart';
+//import '../services/reminder_service.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -116,6 +117,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         setState(() {
           _cookbookRecipeIds[cookbookId]?.remove(id);
         });
+        // Show toast for removal
+        final cookbookIdx = _userCookbookDocIds.indexOf(cookbookId);
+        if (cookbookIdx != -1) {
+          final cookbook = _userCookbooks[cookbookIdx];
+          final messenger = ShadToaster.maybeOf(context);
+          if (messenger != null) {
+            messenger.show(
+              ShadToast(
+                description: Text(
+                  'This recipe has been removed from ${cookbook.title}',
+                ),
+              ),
+            );
+          }
+        }
       }
       // Update global saved state
       savedIds.update((state) {
@@ -167,29 +183,45 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       newSet.add(id);
       return newSet;
     });
+    // Show a toast/snackbar to notify user
+    final cookbookIdx = _userCookbookDocIds.indexOf(selectedCookbookId);
+    if (cookbookIdx != -1) {
+      final cookbook = _userCookbooks[cookbookIdx];
+      final messenger = ShadToaster.maybeOf(context);
+      if (messenger != null) {
+        messenger.show(
+          ShadToast(
+            description: Text(
+              'This recipe has been added to ${cookbook.title}',
+            ),
+          ),
+        );
+      }
+    }
   }
 
   void _searchRecipes() {
     ref.read(homeSearchProvider.notifier).searchRecipes(_searchController.text);
   }
 
-  void _testImmediateNotification() async {
-    final now = DateTime.now().add(const Duration(seconds: 5));
-    await scheduleReminderNotification(
-      now,
-      'This is a test notification from the Home page!',
-    );
-    // Use root navigator context to ensure ScaffoldMessenger is available
-    final rootContext = Navigator.of(context, rootNavigator: true).context;
-    final messenger = ScaffoldMessenger.maybeOf(rootContext);
-    if (mounted && messenger != null) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Test notification scheduled for 5 seconds from now.'),
-        ),
-      );
-    }
-  }
+  // notification test function
+  // void _testImmediateNotification() async {
+  //   final now = DateTime.now().add(const Duration(seconds: 5));
+  //   await scheduleReminderNotification(
+  //     now,
+  //     'This is a test notification from the Home page!',
+  //   );
+  //   // Use root navigator context to ensure ScaffoldMessenger is available
+  //   final rootContext = Navigator.of(context, rootNavigator: true).context;
+  //   final messenger = ScaffoldMessenger.maybeOf(rootContext);
+  //   if (mounted && messenger != null) {
+  //     messenger.showSnackBar(
+  //       const SnackBar(
+  //         content: Text('Test notification scheduled for 5 seconds from now.'),
+  //       ),
+  //     );
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -346,11 +378,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _testImmediateNotification,
-        child: const Icon(Icons.notifications_active),
-        tooltip: 'Test Notification',
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: _testImmediateNotification,
+      //   child: const Icon(Icons.notifications_active),
+      //   tooltip: 'Test Notification',
+      // ),
     );
   }
 }

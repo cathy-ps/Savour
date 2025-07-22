@@ -78,11 +78,15 @@ class _CookbookScreenState extends State<CookbookScreen> {
           .collection('cookbooks')
           .orderBy('createdAt', descending: true)
           .get();
+      List<Map<String, dynamic>> cookbookData = snap.docs
+          .map((doc) => {'data': doc.data(), 'docId': doc.id})
+          .toList();
+
       List<Cookbook> cookbooks = [];
       List<String> cookbookDocIds = [];
-      for (var doc in snap.docs) {
-        final data = doc.data();
-        final docId = doc.id;
+      for (var cb in cookbookData) {
+        final data = cb['data'] as Map<String, dynamic>;
+        final docId = cb['docId'] as String;
         final recipesSnap = await FirebaseFirestore.instance
             .collection('users')
             .doc(_userId)
@@ -128,6 +132,13 @@ class _CookbookScreenState extends State<CookbookScreen> {
       color: color.value,
     );
     await newDoc.set(newCookbook.toJson());
+    // Show toast after creation
+    final messenger = ShadToaster.maybeOf(context);
+    if (messenger != null) {
+      messenger.show(
+        ShadToast(description: Text('Cookbook "$title" has been created')),
+      );
+    }
     _fetchCookbooks();
   }
 

@@ -25,7 +25,9 @@ final shoppingListsProvider = StreamProvider<List<ShoppingList>>((ref) {
       .snapshots();
   return snapStream.map(
     (snap) => snap.docs
-        .map((doc) => ShoppingList.fromJson({...doc.data(), 'id': doc.id}))
+        .map(
+          (doc) => ShoppingList.fromJson({...doc.data(), 'id': doc.id}, doc.id),
+        )
         .toList(),
   );
 });

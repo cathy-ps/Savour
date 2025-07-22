@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class User {
-  //String id;
+  final String id;
   String name;
   DateTime createdAt;
   String email;
   List<String> dietaryPreferences;
 
   User({
-    //required this.id,
+    required this.id,
     required this.name,
     required this.createdAt,
     required this.email,
@@ -17,7 +17,7 @@ class User {
 
   factory User.fromJson(Map<String, dynamic> json, String id) {
     return User(
-      //id: id,
+      id: id,
       name: json['name'] ?? '',
       createdAt: (json['createdAt'] is Timestamp)
           ? (json['createdAt'] as Timestamp).toDate()
@@ -26,6 +26,10 @@ class User {
       dietaryPreferences: List<String>.from(json['dietaryPreferences'] ?? []),
     );
   }
+
+  // For use with Firestore DocumentSnapshot
+  static User fromFirestore(Map<String, dynamic> json, String docId) =>
+      User.fromJson(json, docId);
 
   Map<String, dynamic> toJson() {
     return {

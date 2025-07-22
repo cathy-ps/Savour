@@ -19,16 +19,20 @@ class CookbookScreen extends StatefulWidget {
 class _CookbookScreenState extends State<CookbookScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-  void _openCookbookRecipes(Cookbook cookbook) {
+  void _openCookbookRecipes(Cookbook cookbook, String cookbookDocId) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) =>
-            CookbookDetailScreen(cookbook: cookbook, userId: _userId!),
+        builder: (context) => CookbookDetailScreen(
+          cookbook: cookbook,
+          userId: _userId!,
+          cookbookDocId: cookbookDocId,
+        ),
       ),
     );
   }
 
   List<Cookbook> _cookbooks = [];
+  List<String> _cookbookDocIds = [];
   bool _loading = false;
   String? _error;
   String? _userId;
@@ -74,30 +78,32 @@ class _CookbookScreenState extends State<CookbookScreen> {
           .collection('cookbooks')
           .orderBy('createdAt', descending: true)
           .get();
-      List<Cookbook> cookbooks = snap.docs
-          .map((doc) => Cookbook.fromJson(doc.data(), doc.id))
-          .toList();
-
-      // Fetch actual recipe count for each cookbook
-      for (int i = 0; i < cookbooks.length; i++) {
-        final cb = cookbooks[i];
+      List<Cookbook> cookbooks = [];
+      List<String> cookbookDocIds = [];
+      for (var doc in snap.docs) {
+        final data = doc.data();
+        final docId = doc.id;
         final recipesSnap = await FirebaseFirestore.instance
             .collection('users')
             .doc(_userId)
             .collection('cookbooks')
-            .doc(cb.id)
+            .doc(docId)
             .collection('recipes')
             .get();
-        cookbooks[i] = Cookbook(
-          id: cb.id,
-          title: cb.title,
-          createdAt: cb.createdAt,
-          recipeCount: recipesSnap.docs.length,
-          color: cb.color,
+        cookbooks.add(
+          Cookbook(
+            id: docId,
+            title: data['title'] ?? '',
+            createdAt: (data['createdAt'] as Timestamp).toDate(),
+            recipeCount: recipesSnap.docs.length,
+            color: data['color'] ?? AppColors.primary.value,
+          ),
         );
+        cookbookDocIds.add(docId);
       }
       setState(() {
         _cookbooks = cookbooks;
+        _cookbookDocIds = cookbookDocIds;
         _loading = false;
       });
     } catch (e) {
@@ -226,15 +232,20 @@ class _CookbookScreenState extends State<CookbookScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: Builder(
                     builder: (context) {
-                      final filteredCookbooks = _searchQuery.isEmpty
-                          ? _cookbooks
-                          : _cookbooks
-                                .where(
-                                  (cb) => cb.title.toLowerCase().contains(
-                                    _searchQuery.toLowerCase(),
-                                  ),
-                                )
-                                .toList();
+                      // Build filteredCookbooks and filteredDocIds in parallel
+                      List<int> filteredIndexes = [];
+                      final filteredCookbooks = <Cookbook>[];
+                      final filteredDocIds = <String>[];
+                      for (int i = 0; i < _cookbooks.length; i++) {
+                        final cb = _cookbooks[i];
+                        if (_searchQuery.isEmpty ||
+                            cb.title.toLowerCase().contains(
+                              _searchQuery.toLowerCase(),
+                            )) {
+                          filteredCookbooks.add(cb);
+                          filteredDocIds.add(_cookbookDocIds[i]);
+                        }
+                      }
                       if (filteredCookbooks.isEmpty) {
                         return const Center(child: Text('No cookbooks found.'));
                       }
@@ -249,12 +260,13 @@ class _CookbookScreenState extends State<CookbookScreen> {
                         itemCount: filteredCookbooks.length,
                         itemBuilder: (context, index) {
                           final cb = filteredCookbooks[index];
+                          final docId = filteredDocIds[index];
                           final color = Color(
                             (cb.toJson()['color'] ?? AppColors.primary.value)
                                 as int,
                           );
                           return GestureDetector(
-                            onTap: () => _openCookbookRecipes(cb),
+                            onTap: () => _openCookbookRecipes(cb, docId),
                             child: Container(
                               decoration: BoxDecoration(
                                 color: AppColors.card,

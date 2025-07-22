@@ -94,7 +94,9 @@ class AuthNotifier extends Notifier<AsyncValue<User?>> {
           // Create a default cookbook for the user
           final cookbooksCollection = userDoc.collection('cookbooks');
           await cookbooksCollection.add({
-            'title': 'Favorites',
+            
+                    'title':
+                'Favorites',
             'createdAt': FieldValue.serverTimestamp(),
             'recipeCount': 0,
             'color': 0xFF2196F3, // Default blue

@@ -27,6 +27,10 @@ class Cookbook {
     );
   }
 
+  // For use with Firestore DocumentSnapshot
+  static Cookbook fromFirestore(Map<String, dynamic> json, String docId) =>
+      Cookbook.fromJson(json, docId);
+
   Map<String, dynamic> toJson() {
     return {
       'title': title,

@@ -5,6 +5,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/reminder_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+// Removed unused notification imports; handled by reminder_service.dart
+import '../services/reminder_service.dart';
+
+// Removed unused plugin instance; handled by reminder_service.dart
 
 class ShoppingListCard extends StatefulWidget {
   final ShoppingList list;
@@ -113,9 +117,29 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                         .doc(list.name)
                         .set({'reminder': selected}, SetOptions(merge: true));
                     print('[DEBUG] Firestore write successful');
+
+                    // Schedule local notification to remind user to buy groceries for this recipe
+                    if (selected.isAfter(DateTime.now())) {
+                      // Schedule notification
+                      await scheduleReminderNotification(
+                        selected,
+                        'Don\'t forget to buy groceries for "${list.name}"!',
+                      );
+                      print('[DEBUG] Local notification scheduled');
+                    } else {
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Please select a future time for the reminder.',
+                            ),
+                          ),
+                        );
+                      }
+                    }
                   } catch (e, st) {
                     print(
-                      '[ERROR] Failed to write reminder to Firestore: $e\n$st',
+                      '[ERROR] Failed to set reminder or schedule notification: $e\n$st',
                     );
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(

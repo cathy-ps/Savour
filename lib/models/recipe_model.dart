@@ -13,7 +13,7 @@ class Recipe {
   final String imageUrl;
 
   Recipe({
-    this.id = '',
+    required this.id,
     required this.title,
     required this.category,
     required this.cuisine,
@@ -24,11 +24,11 @@ class Recipe {
     required this.ingredients,
     required this.instructions,
     required this.nutrition,
-    this.imageUrl = '',
+    required this.imageUrl,
   });
 
-  factory Recipe.fromJson(Map<String, dynamic> json) => Recipe(
-    id: json['id'] ?? '',
+  factory Recipe.fromJson(Map<String, dynamic> json, String id) => Recipe(
+    id: id,
     title: json['title'] ?? '',
     category: json['category'] ?? '',
     cuisine: json['cuisine'] ?? '',
@@ -50,8 +50,11 @@ class Recipe {
     imageUrl: json['imageUrl'] ?? json['image_url'] ?? '',
   );
 
+  // For use with Firestore DocumentSnapshot
+  static Recipe fromFirestore(Map<String, dynamic> json, String docId) =>
+      Recipe.fromJson(json, docId);
+
   Map<String, dynamic> toJson() => {
-    'id': id,
     'title': title,
     'category': category,
     'cuisine': cuisine,

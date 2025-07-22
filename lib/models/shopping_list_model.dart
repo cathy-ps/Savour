@@ -11,16 +11,17 @@ class ShoppingListIngredient {
     required this.unit,
   });
 
-  factory ShoppingListIngredient.fromJson(Map<String, dynamic> json) =>
-      ShoppingListIngredient(
-        id: json['id'] ?? '',
-        name: json['name'] ?? '',
-        quantity: json['quantity'] ?? '',
-        unit: json['unit'] ?? '',
-      );
+  factory ShoppingListIngredient.fromJson(
+    Map<String, dynamic> json,
+    String id,
+  ) => ShoppingListIngredient(
+    id: id,
+    name: json['name'] ?? '',
+    quantity: json['quantity'] ?? '',
+    unit: json['unit'] ?? '',
+  );
 
   Map<String, dynamic> toJson() => {
-    'id': id,
     'name': name,
     'quantity': quantity,
     'unit': unit,
@@ -44,20 +45,29 @@ class ShoppingList {
 
   int get totalIngredients => ingredients.length;
 
-  factory ShoppingList.fromJson(Map<String, dynamic> json) => ShoppingList(
-    id: json['id'] ?? '',
-    name: json['name'] ?? '',
-    ingredients: (json['ingredients'] as List<dynamic>? ?? [])
-        .map((x) => ShoppingListIngredient.fromJson(x as Map<String, dynamic>))
-        .toList(),
-    reminder: json['reminder'] != null
-        ? DateTime.tryParse(json['reminder'])
-        : null,
-    createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
-  );
+  factory ShoppingList.fromJson(Map<String, dynamic> json, String id) =>
+      ShoppingList(
+        id: id,
+        name: json['name'] ?? '',
+        ingredients: (json['ingredients'] as List<dynamic>? ?? [])
+            .map(
+              (x) => ShoppingListIngredient.fromJson(
+                x as Map<String, dynamic>,
+                x['id'] ?? '',
+              ),
+            )
+            .toList(),
+        reminder: json['reminder'] != null
+            ? DateTime.tryParse(json['reminder'])
+            : null,
+        createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+      );
+
+  // For use with Firestore DocumentSnapshot
+  static ShoppingList fromFirestore(Map<String, dynamic> json, String docId) =>
+      ShoppingList.fromJson(json, docId);
 
   Map<String, dynamic> toJson() => {
-    'id': id,
     'name': name,
     'ingredients': ingredients.map((x) => x.toJson()).toList(),
     'reminder': reminder?.toIso8601String(),

@@ -15,10 +15,12 @@ import 'package:savourai/screens/recipe_detail.dart';
 class CookbookDetailScreen extends ConsumerWidget {
   final Cookbook cookbook;
   final String userId;
+  final String cookbookDocId;
   const CookbookDetailScreen({
     super.key,
     required this.cookbook,
     required this.userId,
+    required this.cookbookDocId,
   });
 
   Future<List<Recipe>> _fetchRecipes() async {
@@ -26,10 +28,10 @@ class CookbookDetailScreen extends ConsumerWidget {
         .collection('users')
         .doc(userId)
         .collection('cookbooks')
-        .doc(cookbook.id)
+        .doc(cookbookDocId)
         .collection('recipes')
         .get();
-    return snap.docs.map((doc) => Recipe.fromJson(doc.data())).toList();
+    return snap.docs.map((doc) => Recipe.fromJson(doc.data(), doc.id)).toList();
   }
 
   @override
@@ -72,7 +74,7 @@ class CookbookDetailScreen extends ConsumerWidget {
               );
               if (confirm == true) {
                 final notifier = ref.read(cookbookActionsProvider.notifier);
-                await notifier.deleteCookbook(cookbook.id);
+                await notifier.deleteCookbook(cookbookDocId);
                 if (context.mounted) {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -123,7 +125,7 @@ class CookbookDetailScreen extends ConsumerWidget {
                             builder: (context) => RecipeDetailScreen(
                               recipe: recipe,
                               recipeId: id,
-                              cookbookId: cookbook.id,
+                              cookbookId: cookbookDocId,
                               userId: userId,
                             ),
                           ),
@@ -140,7 +142,7 @@ class CookbookDetailScreen extends ConsumerWidget {
                               .collection('users')
                               .doc(userId)
                               .collection('cookbooks')
-                              .doc(cookbook.id)
+                              .doc(cookbookDocId)
                               .collection('recipes')
                               .doc(id);
                           if (isFavorite) {

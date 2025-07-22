@@ -142,7 +142,6 @@ class _CreateCookbookDialogState extends State<CreateCookbookDialog> {
                   final title = _controller.text.trim();
                   if (title.isNotEmpty && _selectedColor != null) {
                     widget.onCreate(title, _selectedColor!);
-                    //Navigator.of(context).pop();
                   }
                 },
                 child: const Text('Create'),

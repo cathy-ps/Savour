@@ -8,6 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/recipe_model.dart';
 import '../providers/saved_recipes_provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../models/cookbook_model.dart';
+import '../widgets/cookbook_selector_dialog.dart';
 
 class RecipeDetailScreen extends ConsumerStatefulWidget {
   final String recipeId;
@@ -27,6 +30,78 @@ class RecipeDetailScreen extends ConsumerStatefulWidget {
 }
 
 class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
+  Future<void> _saveToCookbook(Recipe recipe) async {
+    // Get userId
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      ShadToaster.of(
+        context,
+      ).show(const ShadToast(description: Text('You must be logged in.')));
+      return;
+    }
+    // Fetch cookbooks
+    final cookbooksSnap = await FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('cookbooks')
+        .get();
+    final cookbooks = cookbooksSnap.docs
+        .map((doc) => Cookbook.fromJson(doc.data(), doc.id))
+        .toList();
+    final docIds = cookbooksSnap.docs.map((doc) => doc.id).toList();
+    if (cookbooks.isEmpty || docIds.isEmpty) {
+      ShadToaster.of(
+        context,
+      ).show(const ShadToast(description: Text('No cookbooks available.')));
+      return;
+    }
+    // Show selector dialog
+    final selectedCookbookId = await showDialog<String>(
+      context: context,
+      builder: (context) => CookbookSelectorDialog(cookbooks: cookbooks),
+    );
+    if (selectedCookbookId == null || selectedCookbookId.trim().isEmpty) {
+      ShadToaster.of(
+        context,
+      ).show(const ShadToast(description: Text('No cookbook selected.')));
+      return;
+    }
+    // Save to Firestore
+    final id = recipe.id;
+    final recipeRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(user.uid)
+        .collection('cookbooks')
+        .doc(selectedCookbookId)
+        .collection('recipes')
+        .doc(id);
+    await recipeRef.set(recipe.toJson());
+    if (!mounted) return;
+    ShadToaster.of(context).show(
+      ShadToast(
+        description: const Text('Recipe saved to cookbook!'),
+        action: ShadButton.outline(
+          child: const Text('View Cookbook'),
+          onPressed: () {
+            Navigator.of(context).pop(); // Close the toast if needed
+            Navigator.pushNamed(
+              context,
+              '/cookbook_detail',
+              arguments: selectedCookbookId,
+            );
+          },
+        ),
+      ),
+    );
+    // Optionally update favorite state here if needed
+    final savedIdsNotifier = ref.read(savedRecipeIdsProvider.notifier);
+    savedIdsNotifier.update((state) {
+      final newSet = Set<String>.from(state);
+      newSet.add(id);
+      return newSet;
+    });
+  }
+
   Recipe? _recipe;
   bool _loading = true;
   String? _error;
@@ -55,7 +130,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
             .doc(widget.recipeId)
             .get();
         if (doc.exists) {
-          _recipe = Recipe.fromJson(doc.data()!);
+          _recipe = Recipe.fromJson(doc.data()!, doc.id);
         }
       }
       setState(() => _loading = false);
@@ -70,9 +145,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   @override
   Widget build(BuildContext context) {
     final savedIds = ref.watch(savedRecipeIdsProvider);
-    final recipeKey = _recipe != null
-        ? (_recipe!.id ?? _recipe!.title.hashCode.toString())
-        : '';
+    final recipeKey = _recipe != null ? _recipe!.id : '';
     final isFavorite = _recipe != null && savedIds.contains(recipeKey);
     return Scaffold(
       appBar: AppBar(
@@ -88,8 +161,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
             onPressed: _recipe == null
                 ? null
                 : () async {
-                    final id =
-                        _recipe!.id ?? _recipe!.title.hashCode.toString();
+                    final id = _recipe!.id;
                     final savedIdsNotifier = ref.read(
                       savedRecipeIdsProvider.notifier,
                     );
@@ -111,22 +183,8 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                         return newSet;
                       });
                     } else {
-                      // Save to Firestore if needed
-                      if (widget.userId != null && widget.cookbookId != null) {
-                        await FirebaseFirestore.instance
-                            .collection('users')
-                            .doc(widget.userId)
-                            .collection('cookbooks')
-                            .doc(widget.cookbookId)
-                            .collection('recipes')
-                            .doc(id)
-                            .set(_recipe!.toJson());
-                      }
-                      savedIdsNotifier.update((state) {
-                        final newSet = Set<String>.from(state);
-                        newSet.add(id);
-                        return newSet;
-                      });
+                      // Prompt user to select cookbook and save
+                      await _saveToCookbook(_recipe!);
                     }
                   },
           ),

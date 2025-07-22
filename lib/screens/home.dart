@@ -14,6 +14,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/saved_recipes_provider.dart';
 import '../providers/home_search_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
+import '../services/reminder_service.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -26,6 +27,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
   // Cookbook and favorite state
   List<Cookbook> _userCookbooks = [];
+  List<String> _userCookbookDocIds = [];
   final Map<String, List<String>> _cookbookRecipeIds = {};
   String? _userId;
 
@@ -68,8 +70,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final cookbooks = cookbooksSnap.docs
         .map((doc) => Cookbook.fromJson(doc.data(), doc.id))
         .toList();
+    final docIds = cookbooksSnap.docs.map((doc) => doc.id).toList();
     setState(() {
       _userCookbooks = cookbooks;
+      _userCookbookDocIds = docIds;
     });
     for (var doc in cookbooksSnap.docs) {
       final recipesSnap = await doc.reference.collection('recipes').get();
@@ -78,13 +82,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   String _getRecipeId(Recipe recipe) {
-    // Use recipe.id if available, otherwise fallback to hashCode or title
-    try {
-      // ignore: invalid_use_of_protected_member
-      return (recipe as dynamic).id ?? recipe.title.hashCode.toString();
-    } catch (_) {
-      return recipe.title.hashCode.toString();
-    }
+    if (recipe.id.isNotEmpty) return recipe.id;
+    if (recipe.title.isNotEmpty) return recipe.title.hashCode.toString();
+    // fallback: generate a unique string
+    return UniqueKey().toString();
   }
 
   bool _isRecipeSavedGlobally(Recipe recipe) {
@@ -125,16 +126,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
     // Otherwise, prompt user to select a cookbook
+    if (_userCookbooks.isEmpty || _userCookbookDocIds.isEmpty) {
+      debugPrint('No cookbooks available for selection.');
+      return;
+    }
+    // Show the selector dialog and get the selected cookbook's docId
     final selectedCookbookId = await showDialog<String>(
       context: context,
       builder: (context) => CookbookSelectorDialog(
         cookbooks: _userCookbooks,
-        onCreateNew: () {
-          // Optionally, add logic to create a new cookbook
-        },
+        //cookbookDocIds: _userCookbookDocIds,
       ),
     );
-    if (selectedCookbookId == null || selectedCookbookId.isEmpty) return;
+
+    if (selectedCookbookId == null || selectedCookbookId.trim().isEmpty) {
+      debugPrint('No valid cookbook ID selected: "$selectedCookbookId"');
+      return;
+    }
+    print('userId: $_userId');
+    print('selectedCookbookId: $selectedCookbookId');
+    print('recipeId: $id');
+
+    // Save the recipe to the selected cookbook's recipes subcollection in Firestore
     final recipeRef = FirebaseFirestore.instance
         .collection('users')
         .doc(_userId)
@@ -142,6 +155,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         .doc(selectedCookbookId)
         .collection('recipes')
         .doc(id);
+
     await recipeRef.set(recipe.toJson());
     setState(() {
       _cookbookRecipeIds[selectedCookbookId] ??= [];
@@ -157,6 +171,24 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   void _searchRecipes() {
     ref.read(homeSearchProvider.notifier).searchRecipes(_searchController.text);
+  }
+
+  void _testImmediateNotification() async {
+    final now = DateTime.now().add(const Duration(seconds: 5));
+    await scheduleReminderNotification(
+      now,
+      'This is a test notification from the Home page!',
+    );
+    // Use root navigator context to ensure ScaffoldMessenger is available
+    final rootContext = Navigator.of(context, rootNavigator: true).context;
+    final messenger = ScaffoldMessenger.maybeOf(rootContext);
+    if (mounted && messenger != null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Test notification scheduled for 5 seconds from now.'),
+        ),
+      );
+    }
   }
 
   @override
@@ -313,6 +345,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _testImmediateNotification,
+        child: const Icon(Icons.notifications_active),
+        tooltip: 'Test Notification',
       ),
     );
   }

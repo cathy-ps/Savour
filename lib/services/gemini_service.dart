@@ -78,7 +78,7 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
       }
       final data = jsonDecode(jsonArray);
       if (data is List) {
-        return data.map((e) => Recipe.fromJson(e)).toList();
+        return data.map((e) => Recipe.fromJson(e, '')).toList();
       } else {
         print('[GeminiService] Response was not a List: $data');
         return [];
@@ -153,7 +153,7 @@ Do not include any text, markdown, or explanation before or after the JSON array
 
     // Parse recipes
     List<dynamic> jsonList = jsonDecode(jsonArray);
-    List<Recipe> recipes = jsonList.map((e) => Recipe.fromJson(e)).toList();
+    List<Recipe> recipes = jsonList.map((e) => Recipe.fromJson(e, '')).toList();
 
     return recipes;
   }

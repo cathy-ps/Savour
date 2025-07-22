@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_chat_ui/flutter_chat_ui.dart';
 import '../providers/home_search_provider.dart';
-import '../widgets/recipe_card.dart';
+import '../widgets/recipe_card_for_bot.dart';
+import 'recipe_detail.dart';
 import '../services/gemini_service.dart';
 import '../models/recipe_model.dart';
+//import 'package:savourai/screens/recipe_detail.dart';
 
 class ChatbotScreen extends ConsumerStatefulWidget {
   const ChatbotScreen({Key? key}) : super(key: key);
@@ -46,7 +48,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       final response = await gemini.getCookingTipOrAnswer(text);
       setState(() {
         _messages.add(ChatMessage(text: response, isUser: false));
-        _lastRecipes = [];
+        // Do NOT clear _lastRecipes; keep the grid visible
         _loading = false;
       });
     }
@@ -59,13 +61,35 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(8),
-              itemCount: _messages.length + (_lastRecipes.isNotEmpty ? 1 : 0),
-              itemBuilder: (context, index) {
-                if (_lastRecipes.isNotEmpty && index == _messages.length) {
-                  // Show grid of RecipeCards as a bot message
-                  return Padding(
+            child: Column(
+              children: [
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.all(8),
+                    itemCount: _messages.length,
+                    itemBuilder: (context, index) {
+                      final msg = _messages[index];
+                      return Align(
+                        alignment: msg.isUser
+                            ? Alignment.centerRight
+                            : Alignment.centerLeft,
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: msg.isUser
+                                ? Colors.blue[100]
+                                : Colors.grey[200],
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(msg.text),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (_lastRecipes.isNotEmpty)
+                  Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: GridView.builder(
                       shrinkWrap: true,
@@ -79,27 +103,25 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                           ),
                       itemCount: _lastRecipes.length,
                       itemBuilder: (context, i) {
-                        return RecipeCard(recipe: _lastRecipes[i]);
+                        final recipe = _lastRecipes[i];
+                        return RecipeCardForBot(
+                          recipe: recipe,
+                          imageUrl: recipe.imageUrl,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => RecipeDetailScreen(
+                                  recipe: recipe,
+                                  recipeId: recipe.id,
+                                ),
+                              ),
+                            );
+                          },
+                        );
                       },
                     ),
-                  );
-                }
-                final msg = _messages[index];
-                return Align(
-                  alignment: msg.isUser
-                      ? Alignment.centerRight
-                      : Alignment.centerLeft,
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: msg.isUser ? Colors.blue[100] : Colors.grey[200],
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(msg.text),
                   ),
-                );
-              },
+              ],
             ),
           ),
           if (_loading) const LinearProgressIndicator(),

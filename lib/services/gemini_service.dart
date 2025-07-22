@@ -22,6 +22,50 @@ Future<String?> fetchPexelsImage(String query, String apiKey) async {
 }
 
 class GeminiService {
+  /// Advanced chatbot method: answers questions, suggests substitutions, and gives cooking tips.
+  /// If the question is about substitutions, tips, or general cooking, Gemini will answer accordingly.
+  /// If the question is about a specific ingredient, it will suggest substitutions.
+  /// If the question is about a recipe, it will provide tips or answer the question.
+  Future<String> getCookingTipOrAnswer(String userInput) async {
+    // Heuristic: If user asks for substitution
+    final lower = userInput.toLowerCase();
+    String prompt;
+    if (lower.contains('substitute') ||
+        lower.contains('replacement') ||
+        lower.contains('instead of')) {
+      prompt =
+          '''
+You are a helpful cooking assistant. Suggest the best ingredient substitutions for the following user request. If there are multiple options, explain the pros and cons. Be concise and friendly.
+User: $userInput
+''';
+    } else if (lower.contains('tip') ||
+        lower.contains('how do i') ||
+        lower.contains('how to') ||
+        lower.contains('advice')) {
+      prompt =
+          '''
+You are a helpful cooking assistant. Provide a practical, concise cooking tip or answer the user's question. Be friendly and clear.
+User: $userInput
+''';
+    } else if (lower.contains('can i use') ||
+        lower.contains('is it ok to use')) {
+      prompt =
+          '''
+You are a helpful cooking assistant. Advise the user if their suggested ingredient swap is appropriate, and explain why or why not. Be concise and friendly.
+User: $userInput
+''';
+    } else {
+      prompt =
+          '''
+You are a smart cooking assistant. Answer the user's question about cooking, ingredients, or recipes. If relevant, provide a tip or suggestion. Be concise and friendly.
+User: $userInput
+''';
+    }
+    final result = await generateText(prompt);
+    return result?.trim() ??
+        'Sorry, I could not find an answer to your question.';
+  }
+
   GoogleImageSearchService? _googleImageService;
 
   void setGoogleImageSearchService(GoogleImageSearchService service) {

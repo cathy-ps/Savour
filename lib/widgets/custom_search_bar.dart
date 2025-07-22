@@ -23,15 +23,15 @@ class CustomSearchBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 12, horizontal: 0),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(30),
+        color: AppColors.secondary,
+        borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: AppColors.darkGrey.withValues(alpha: 0.5),
+            blurRadius: 4,
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -43,13 +43,14 @@ class CustomSearchBar extends StatelessWidget {
             child: TextField(
               controller: controller,
               onChanged: onChanged,
+              cursorColor: AppColors.darkGrey,
               decoration: InputDecoration(
                 hintText: hintText,
                 border: InputBorder.none,
                 isDense: true,
                 contentPadding: const EdgeInsets.symmetric(vertical: 10),
                 hintStyle: const TextStyle(
-                  color: AppColors.border,
+                  color: AppColors.darkGrey,
                   fontSize: 16,
                 ),
               ),
@@ -65,10 +66,7 @@ class CustomSearchBar extends StatelessWidget {
               },
               child: Container(
                 padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                ),
+
                 child: submitIcon,
               ),
             ),

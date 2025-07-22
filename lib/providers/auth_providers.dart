@@ -88,7 +88,7 @@ class AuthNotifier extends Notifier<AsyncValue<User?>> {
             'name': displayName ?? '',
             'email': email.trim(),
             'createdAt': FieldValue.serverTimestamp(),
-            'userPreferences': <String>[],
+            'dietaryPreferences': <String>[],
           });
 
           // Create a default cookbook for the user

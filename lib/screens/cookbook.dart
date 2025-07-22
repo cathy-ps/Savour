@@ -201,10 +201,9 @@ class _CookbookScreenState extends State<CookbookScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 8),
                   ShadInputFormField(
                     enableInteractiveSelection: false,
-
                     //autovalidateMode: AutovalidateMode.onUserInteraction,
                     decoration: ShadDecoration(
                       color: AppColors.white,

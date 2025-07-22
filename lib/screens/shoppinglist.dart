@@ -64,98 +64,130 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
       builder: (context, ref, _) {
         final shoppingListsAsync = ref.watch(shoppingListsProvider);
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Shopping Lists'),
-            backgroundColor: AppColors.primary,
-            foregroundColor: AppColors.white,
-          ),
-          body: shoppingListsAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, _) => Center(child: Text('Error: $e')),
-            data: (shoppingLists) {
-              if (shoppingLists.isEmpty) {
-                return const Center(child: Text('No shopping lists.'));
-              }
-              return Column(
-                children: [
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: shoppingLists.length,
-                      onPageChanged: (i) => setState(() => _currentPage = i),
-                      itemBuilder: (context, index) {
-                        final list = shoppingLists[index];
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: ShoppingListCard(
-                            list: list,
-                            onDelete: () async {
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (context) => AlertDialog(
-                                  title: const Text('Delete Shopping List'),
-                                  content: const Text(
-                                    'Are you sure you want to delete this shopping list?',
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                  decoration: const BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.only(
+                      bottomLeft: Radius.circular(24),
+                      bottomRight: Radius.circular(24),
+                    ),
+                  ),
+                  child: const Text(
+                    'Shopping Lists',
+                    style: TextStyle(
+                      color: AppColors.white,
+                      fontSize: 24,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: shoppingListsAsync.when(
+                    loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                    error: (e, _) => Center(child: Text('Error: $e')),
+                    data: (shoppingLists) {
+                      if (shoppingLists.isEmpty) {
+                        return const Center(child: Text('No shopping lists.'));
+                      }
+                      return Column(
+                        children: [
+                          const SizedBox(height: 16),
+                          Expanded(
+                            child: PageView.builder(
+                              controller: _pageController,
+                              itemCount: shoppingLists.length,
+                              onPageChanged: (i) =>
+                                  setState(() => _currentPage = i),
+                              itemBuilder: (context, index) {
+                                final list = shoppingLists[index];
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
                                   ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.of(context).pop(true),
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(
-                                          color: AppColors.error,
+                                  child: ShoppingListCard(
+                                    list: list,
+                                    onDelete: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (context) => AlertDialog(
+                                          title: const Text(
+                                            'Delete Shopping List',
+                                          ),
+                                          content: const Text(
+                                            'Are you sure you want to delete this shopping list?',
+                                          ),
+                                          actions: [
+                                            TextButton(
+                                              onPressed: () => Navigator.of(
+                                                context,
+                                              ).pop(false),
+                                              child: const Text('Cancel'),
+                                            ),
+                                            TextButton(
+                                              onPressed: () => Navigator.of(
+                                                context,
+                                              ).pop(true),
+                                              child: const Text(
+                                                'Delete',
+                                                style: TextStyle(
+                                                  color: AppColors.error,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true) {
-                                await deleteShoppingList(list.id);
-                              }
-                            },
-                            onSetReminder: () async {
-                              await _setReminder(
-                                context,
-                                list.id,
-                                list.reminder,
-                              );
-                            },
+                                      );
+                                      if (confirm == true) {
+                                        await deleteShoppingList(list.id);
+                                      }
+                                    },
+                                    onSetReminder: () async {
+                                      await _setReminder(
+                                        context,
+                                        list.id,
+                                        list.reminder,
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
                           ),
-                        );
-                      },
-                    ),
+                          const SizedBox(height: 12),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: List.generate(
+                              shoppingLists.length,
+                              (i) => Container(
+                                width: 10,
+                                height: 10,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color: i == _currentPage
+                                      ? AppColors.primary
+                                      : AppColors.muted,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-
-                    // Display page indicators
-                    children: List.generate(
-                      shoppingLists.length,
-                      (i) => Container(
-                        width: 10,
-                        height: 10,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: i == _currentPage
-                              ? AppColors.primary
-                              : AppColors.muted,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              );
-            },
+                ),
+              ],
+            ),
           ),
         );
       },

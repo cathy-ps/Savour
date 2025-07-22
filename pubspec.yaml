@@ -49,6 +49,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_nav_bar: ^5.0.7
   shadcn_ui: ^0.28.0
+  google_fonts: ^6.2.1
+  
 
 
   google_generative_ai: ^0.4.7
@@ -57,6 +59,7 @@ dependencies:
   shared_preferences: ^2.2.2
   salomon_bottom_bar: ^3.3.2
   flutter_timezone: ^4.1.1
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
@@ -85,6 +88,16 @@ flutter:
     - assets/images/avatar.png
     - assets/images/bg.jpg    
     - assets/images/list_bg.jpg
+
+   
+  fonts:
+    - family: Poppins
+      fonts:
+        - asset: fonts/Poppins-Regular.ttf
+        - asset: fonts/Poppins-Italic.ttf
+        - asset: fonts/Poppins-Bold.ttf
+        - asset: fonts/Poppins-Medium.ttf
+        
 
   # To add assets to your application, add an assets section, like this:
   # assets:

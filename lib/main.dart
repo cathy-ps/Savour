@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:savourai/constant/colors.dart';
 import 'firebase_options.dart';
 import 'screens/auth/welcome.dart';
 import 'root.dart';
@@ -10,21 +11,76 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await dotenv.load(fileName: 'assets/.env');
-  tz.initializeTimeZones();
-  tz.setLocalLocation(tz.getLocation('Asia/Kuala_Lumpur'));
+
+Future<void> initNotifications() async {
+  print('[DEBUG] Initializing notifications...');
+
+  // Create the notification channel for Android
+  final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+      flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+
+  final bool? channelExists = await androidImplementation
+      ?.areNotificationsEnabled();
+  print('[DEBUG] Notifications enabled: $channelExists');
+
+  const AndroidNotificationChannel channel = AndroidNotificationChannel(
+    'reminder_channel_id',
+    'Reminders',
+    description: 'Channel for reminder notifications',
+    importance: Importance.max,
+    playSound: true,
+    enableVibration: true,
+    showBadge: true,
+  );
+
+  await androidImplementation?.createNotificationChannel(channel);
+  print('[DEBUG] Notification channel created');
+
   const AndroidInitializationSettings initializationSettingsAndroid =
       AndroidInitializationSettings('@mipmap/ic_launcher');
+
   const InitializationSettings initializationSettings = InitializationSettings(
     android: initializationSettingsAndroid,
   );
-  await flutterLocalNotificationsPlugin.initialize(initializationSettings);
+
+  await flutterLocalNotificationsPlugin.initialize(
+    initializationSettings,
+    onDidReceiveNotificationResponse: (NotificationResponse response) {
+      print('[DEBUG] Notification clicked: ${response.payload}');
+    },
+  );
+  print('[DEBUG] Notifications initialized');
+
+  // Test if notifications are working
+  final bool? enabled = await androidImplementation?.areNotificationsEnabled();
+  print('[DEBUG] Notifications enabled after initialization: $enabled');
+}
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await dotenv.load(fileName: 'assets/.env');
+
+  // Initialize timezone
+  tz.initializeTimeZones();
+  tz.setLocalLocation(tz.getLocation('Asia/Kuala_Lumpur'));
+
+  // Initialize notifications
+  await initNotifications();
+
+  // Request notification permission for Android 13+
+  if (await Permission.notification.isDenied) {
+    await Permission.notification.request();
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -41,7 +97,14 @@ class MyApp extends StatelessWidget {
           title: 'SavourAI',
           darkTheme: ShadThemeData(
             brightness: Brightness.dark,
-            colorScheme: const ShadSlateColorScheme.dark(),
+            colorScheme: const ShadZincColorScheme.light(
+              primary: AppColors.primary,
+              background: Colors.white10, // Optionally override background
+            ),
+            textTheme: ShadTextTheme.fromGoogleFont(GoogleFonts.poppins),
+            primaryButtonTheme: const ShadButtonTheme(
+              backgroundColor: AppColors.primary,
+            ),
           ),
           debugShowCheckedModeBanner: false,
           home: authState.when(

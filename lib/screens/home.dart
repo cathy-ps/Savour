@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:savourai/constant/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:savourai/widgets/custom_search_bar.dart';
-import 'profile.dart';
+import 'settings.dart';
 
 import 'package:savourai/models/recipe_model.dart';
 import 'package:savourai/models/cookbook_model.dart';
@@ -14,8 +14,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../providers/saved_recipes_provider.dart';
 import '../providers/home_search_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
-//import '../services/reminder_service.dart';
+import '../services/reminder_service.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
@@ -204,30 +205,85 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ref.read(homeSearchProvider.notifier).searchRecipes(_searchController.text);
   }
 
-  // notification test function
-  // void _testImmediateNotification() async {
-  //   final now = DateTime.now().add(const Duration(seconds: 5));
-  //   await scheduleReminderNotification(
-  //     now,
-  //     'This is a test notification from the Home page!',
-  //   );
-  //   // Use root navigator context to ensure ScaffoldMessenger is available
-  //   final rootContext = Navigator.of(context, rootNavigator: true).context;
-  //   final messenger = ScaffoldMessenger.maybeOf(rootContext);
-  //   if (mounted && messenger != null) {
-  //     messenger.showSnackBar(
-  //       const SnackBar(
-  //         content: Text('Test notification scheduled for 5 seconds from now.'),
-  //       ),
-  //     );
-  //   }
-  // }
+  void _testImmediateNotification() async {
+    try {
+      // Check notification permission first
+      final status = await Permission.notification.status;
+      print('[DEBUG] Notification permission status: $status');
+
+      if (status.isDenied) {
+        print('[DEBUG] Requesting notification permission...');
+        final result = await Permission.notification.request();
+        print('[DEBUG] Permission request result: $result');
+        if (result.isDenied) {
+          if (mounted) {
+            final messenger = ShadToaster.maybeOf(context);
+            if (messenger != null) {
+              messenger.show(
+                const ShadToast(
+                  description: Text(
+                    'Please enable notifications in settings to receive reminders.',
+                  ),
+                ),
+              );
+            }
+          }
+          return;
+        }
+      }
+
+      // Try immediate notification first
+      final int immediateId =
+          DateTime.now().millisecondsSinceEpoch & 0x7FFFFFFF;
+      print('[DEBUG] Trying immediate notification first...');
+      await showImmediateNotification(
+        immediateId,
+        'This is an immediate test notification!',
+      );
+
+      // Then try scheduled notification
+      final now = DateTime.now().add(
+        const Duration(seconds: 10),
+      ); // Increased to 10 seconds
+      final int scheduledId = now.millisecondsSinceEpoch & 0x7FFFFFFF;
+
+      print('[DEBUG] Then trying scheduled notification...');
+      await scheduleReminderNotification(
+        scheduledId,
+        now,
+        'This is a scheduled test notification!',
+      );
+
+      final messenger = ShadToaster.maybeOf(context);
+      if (mounted && messenger != null) {
+        messenger.show(
+          const ShadToast(
+            description: Text(
+              'Test notifications sent - check your notification shade!',
+            ),
+          ),
+        );
+      }
+    } catch (e, stackTrace) {
+      print('[ERROR] Failed to send notifications: $e');
+      print('[ERROR] Stack trace: $stackTrace');
+
+      if (mounted) {
+        final messenger = ShadToaster.maybeOf(context);
+        if (messenger != null) {
+          messenger.show(
+            ShadToast(description: Text('Failed to send notifications: $e')),
+          );
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final searchState = ref.watch(homeSearchProvider);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Column(
@@ -239,13 +295,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   horizontal: 20,
                   vertical: 24,
                 ),
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(24),
-                    bottomRight: Radius.circular(24),
-                  ),
-                ),
+                // decoration: BoxDecoration(
+                //   color: AppColors.primary,
+                //   borderRadius: const BorderRadius.only(
+                //     bottomLeft: Radius.circular(24),
+                //     bottomRight: Radius.circular(24),
+                //   ),
+                // ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -258,7 +314,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             Text(
                               '${_getGreeting()}, ${_getUserName()}',
                               style: const TextStyle(
-                                color: AppColors.white,
+                                color: AppColors.black,
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -267,25 +323,35 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             const Text(
                               'What ingredients do you have?',
                               style: TextStyle(
-                                color: AppColors.muted,
+                                color: AppColors.black,
                                 fontSize: 16,
                               ),
                             ),
                           ],
                         ),
-                        IconButton(
-                          icon: const Icon(
-                            Icons.person_outline,
-                            color: AppColors.white,
-                            size: 28,
-                          ),
-                          onPressed: () {
+
+                        GestureDetector(
+                          onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => ProfileScreen(),
+                                builder: (context) => SettingsScreen(),
                               ),
                             );
                           },
+                          child: CircleAvatar(
+                            backgroundColor: AppColors.primary,
+                            radius: 24,
+                            child: Text(
+                              _getUserName().isNotEmpty
+                                  ? _getUserName()[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                color: AppColors.secondary,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -293,9 +359,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     CustomSearchBar(
                       controller: _searchController,
                       hintText: 'e.g. eggs, rice, etc',
-                      submitIcon: const Icon(
-                        Icons.rocket_launch_outlined,
-                        color: AppColors.white,
+                      submitIcon: const ShadIconButton.secondary(
+                        icon: Icon(LucideIcons.rocket),
                       ),
                       onSubmit: _searchRecipes,
                     ),
@@ -380,8 +445,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       ),
       // floatingActionButton: FloatingActionButton(
       //   onPressed: _testImmediateNotification,
-      //   child: const Icon(Icons.notifications_active),
       //   tooltip: 'Test Notification',
+      //   child: const Icon(Icons.notifications_active),
       // ),
     );
   }

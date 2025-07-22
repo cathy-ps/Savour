@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 // Removed unused notification imports; handled by reminder_service.dart
 import '../services/reminder_service.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
 
 // Removed unused plugin instance; handled by reminder_service.dart
 
@@ -122,6 +123,7 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                     if (selected.isAfter(DateTime.now())) {
                       // Schedule notification
                       await scheduleReminderNotification(
+                        list.name.hashCode, // Unique notification ID
                         selected,
                         'Don\'t forget to buy groceries for "${list.name}"!',
                       );
@@ -142,8 +144,10 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                       '[ERROR] Failed to set reminder or schedule notification: $e\n$st',
                     );
                     if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Failed to set reminder: $e')),
+                      ShadToaster.of(context).show(
+                        ShadToast(
+                          description: Text('Failed to set reminder: $e'),
+                        ),
                       );
                     }
                   }
@@ -152,10 +156,10 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
             }
 
             return Card(
-              elevation: 6,
-              margin: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
+              elevation: 3,
+              margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(14),
               ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
@@ -172,13 +176,12 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                   // Overlay for readability
                   Container(
                     decoration: BoxDecoration(
-                      //color: Colors.black.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(18),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   // Card content
                   Padding(
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(10),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -205,16 +208,9 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                               child: Text(
                                 list.name,
                                 style: const TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
                                   color: Colors.black,
-                                  // shadows: [
-                                  //   Shadow(
-                                  //     color: Colors.black54,
-                                  //     offset: Offset(0, 1),
-                                  //     blurRadius: 4,
-                                  //   ),
-                                  // ],
                                 ),
                               ),
                             ),
@@ -222,6 +218,7 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                               icon: const Icon(
                                 Icons.more_vert,
                                 color: Colors.black,
+                                size: 20,
                               ),
                               onSelected: (value) async {
                                 if (value == 'reminder') {
@@ -237,8 +234,12 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                                     leading: Icon(
                                       Icons.alarm,
                                       color: Colors.black,
+                                      size: 18,
                                     ),
-                                    title: Text('Set Reminder'),
+                                    title: Text(
+                                      'Set Reminder',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
                                   ),
                                 ),
                                 const PopupMenuItem<String>(
@@ -247,30 +248,28 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                                     leading: Icon(
                                       Icons.delete,
                                       color: Colors.redAccent,
+                                      size: 18,
                                     ),
-                                    title: Text('Delete List'),
+                                    title: Text(
+                                      'Delete List',
+                                      style: TextStyle(fontSize: 14),
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Text(
                           'Total ingredients: ${list.totalIngredients}',
                           style: const TextStyle(
                             color: Colors.black54,
                             fontWeight: FontWeight.w500,
-                            shadows: [
-                              Shadow(
-                                color: Colors.white54,
-                                offset: Offset(0, 1),
-                                blurRadius: 4,
-                              ),
-                            ],
+                            fontSize: 12,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 4),
                         Expanded(
                           child: Builder(
                             builder: (context) {
@@ -299,6 +298,12 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                                   final origIdx =
                                       indexed[sortedIdx]['index'] as int;
                                   return ListTile(
+                                    dense: true,
+                                    contentPadding: const EdgeInsets.symmetric(
+                                      horizontal: 0,
+                                      vertical: 0,
+                                    ),
+                                    minLeadingWidth: 0,
                                     leading: InkWell(
                                       onTap: () {
                                         setState(
@@ -306,10 +311,10 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                                               !_checked[origIdx],
                                         );
                                       },
-                                      borderRadius: BorderRadius.circular(16),
+                                      borderRadius: BorderRadius.circular(12),
                                       child: Container(
-                                        width: 24,
-                                        height: 24,
+                                        width: 18,
+                                        height: 18,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
@@ -329,7 +334,7 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                                         child: checked
                                             ? const Icon(
                                                 Icons.check,
-                                                size: 16,
+                                                size: 12,
                                                 color: Colors.white,
                                               )
                                             : null,
@@ -343,10 +348,12 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                                                   TextDecoration.lineThrough,
                                               color: Colors.black54,
                                               fontWeight: FontWeight.w500,
+                                              fontSize: 13,
                                             )
                                           : const TextStyle(
                                               color: Colors.black,
                                               fontWeight: FontWeight.w500,
+                                              fontSize: 13,
                                             ),
                                     ),
                                     onTap: () {

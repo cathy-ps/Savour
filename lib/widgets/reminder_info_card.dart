@@ -31,28 +31,32 @@ class ReminderInfoCard extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 4),
       child: ShadCard(
+        padding: const EdgeInsets.all(8),
         title: Row(
           children: [
-            const Icon(Icons.alarm, color: Colors.grey, size: 20),
-            const SizedBox(width: 8),
+            const Icon(Icons.alarm, color: Colors.grey, size: 16),
+            const SizedBox(width: 4),
             Expanded(
               child: Text(
                 'Reminder Set for: \n${formatDate(reminder!)}',
                 style: const TextStyle(
                   color: Colors.black87,
                   fontWeight: FontWeight.w400,
-                  fontSize: 16,
+                  fontSize: 13,
                 ),
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 4),
             IconButton(
-              icon: const Icon(Icons.close, color: Colors.red, size: 20),
+              icon: const Icon(Icons.close, color: Colors.red, size: 16),
               onPressed: onClearReminder,
               tooltip: 'Remove reminder',
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(minWidth: 28, minHeight: 28),
             ),
           ],
         ),

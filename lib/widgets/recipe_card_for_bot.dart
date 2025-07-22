@@ -34,7 +34,7 @@ class RecipeCardForBot extends StatelessWidget {
         child: Stack(
           children: [
             SizedBox(
-              height: 110,
+              height: 150,
               width: double.infinity,
               child: imgUrl != null
                   ? Image.network(
@@ -55,7 +55,7 @@ class RecipeCardForBot extends StatelessWidget {
                     ),
             ),
             Container(
-              height: 110,
+              height: 80,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(14),
                 gradient: LinearGradient(

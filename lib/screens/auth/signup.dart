@@ -3,6 +3,7 @@ import 'signin.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'package:savourai/providers/auth_providers.dart';
+import 'package:savourai/utils/form_validators.dart';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -28,36 +29,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
-  }
-
-  String? _validateName(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Name is required';
-    }
-    return null;
-  }
-
-  String? _validateEmail(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return 'Email is required';
-    }
-    final emailRegex = RegExp(
-      r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$',
-    );
-    if (!emailRegex.hasMatch(value.trim())) {
-      return 'Please enter a valid email address';
-    }
-    return null;
-  }
-
-  String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) {
-      return 'Password is required';
-    }
-    if (value.length < 6) {
-      return 'Password must be at least 6 characters';
-    }
-    return null;
   }
 
   Future<void> _signUp() async {
@@ -148,7 +119,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     id: 'name',
                     label: const Text('Full Name'),
                     placeholder: const Text('Enter your full name'),
-                    validator: _validateName,
+                    validator: validateName,
                     leading: const Padding(
                       padding: EdgeInsets.all(4.0),
                       child: Icon(Icons.person_outline),
@@ -161,7 +132,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     id: 'email',
                     label: const Text('Email Address'),
                     placeholder: const Text('Enter your email'),
-                    validator: _validateEmail,
+                    validator: validateEmail,
                     leading: const Padding(
                       padding: EdgeInsets.all(4.0),
                       child: Icon(Icons.mail_outline),
@@ -175,7 +146,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     id: 'password',
                     label: const Text('Password'),
                     placeholder: const Text('Enter your password'),
-                    validator: _validatePassword,
+                    validator: validatePassword,
                     obscureText: _obscurePassword,
                     leading: const Padding(
                       padding: EdgeInsets.all(4.0),
@@ -199,34 +170,22 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-                  // ShadInputFormField(
-                  //   controller: _confirmPasswordController,
-                  //   id: 'confirm_password',
-                  //   label: const Text('Confirm Password'),
-                  //   placeholder: const Text('Re-enter your password'),
-                  //   validator: _validateConfirmPassword,
-                  //   obscureText: _obscureConfirmPassword,
-                  //   leading: const Padding(
-                  //     padding: EdgeInsets.all(4.0),
-                  //     child: Icon(Icons.lock_outline),
-                  //   ),
-                  //   trailing: ShadButton.ghost(
-                  //     width: 24,
-                  //     height: 24,
-                  //     padding: EdgeInsets.zero,
-                  //     child: Icon(
-                  //       _obscureConfirmPassword
-                  //           ? Icons.visibility_off
-                  //           : Icons.visibility,
-                  //     ),
-                  //     onPressed: () {
-                  //       setState(() {
-                  //         _obscureConfirmPassword = !_obscureConfirmPassword;
-                  //       });
-                  //     },
-                  //   ),
-                  //   textInputAction: TextInputAction.done,
-                  // ),
+                  ShadInputFormField(
+                    controller: _confirmPasswordController,
+                    id: 'confirm_password',
+                    label: const Text('Confirm Password'),
+                    placeholder: const Text('Re-enter your password'),
+                    validator: (value) => validateConfirmPassword(
+                      value,
+                      _passwordController.text,
+                    ),
+                    obscureText: _obscurePassword,
+                    leading: const Padding(
+                      padding: EdgeInsets.all(4.0),
+                      child: Icon(Icons.lock_outline),
+                    ),
+                    textInputAction: TextInputAction.done,
+                  ),
                   const SizedBox(height: 24),
                   ShadButton(
                     onPressed: _isLoading ? null : _signUp,

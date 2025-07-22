@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:savourai/utils/form_validators.dart';
 
 class CreateCookbookDialog extends StatefulWidget {
   final void Function(String title, Color color) onCreate;
@@ -80,6 +81,7 @@ class _CreateCookbookDialogState extends State<CreateCookbookDialog> {
             id: 'cookbook_name',
             label: const Text('Cookbook Name'),
             placeholder: const Text('Enter a name for your cookbook'),
+            validator: validateCookbookName,
             textInputAction: TextInputAction.done,
           ),
           const SizedBox(height: 20),

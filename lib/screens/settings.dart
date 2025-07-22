@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:savourai/screens/auth/welcome.dart';
+import 'package:savourai/utils/form_validators.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import '../providers/user_profile_provider.dart';
 import 'package:savourai/constant/colors.dart';
+import 'package:savourai/constant/dietary_preferences.dart';
 import 'package:savourai/widgets/sign_out_card.dart';
+import 'package:savourai/providers/auth_providers.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -114,9 +117,9 @@ class SettingsScreen extends ConsumerWidget {
                   );
                   if (newPassword != null && newPassword.isNotEmpty) {
                     await changeUserPassword(newPassword);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Password changed successfully.'),
+                    ShadToaster.of(context).show(
+                      ShadToast(
+                        title: const Text('Password changed successfully.'),
                       ),
                     );
                   }
@@ -137,18 +140,10 @@ class SettingsScreen extends ConsumerWidget {
                   }
                 },
               ),
+              const SizedBox(height: 24),
 
-              const SizedBox(height: 24),
-              // Notifications Section
-              const _SectionHeader(title: 'Notifications'),
-              _SwitchTile(
-                title: 'App notification',
-                value: true,
-                onChanged: (v) {},
-              ),
-              const SizedBox(height: 24),
               // More Section
-              const _SectionHeader(title: 'About'),
+              const _SectionHeader(title: 'Others'),
               _SettingsTile(
                 title: 'About Savour',
                 onTap: () async {
@@ -258,30 +253,30 @@ class _SettingsTile extends StatelessWidget {
   }
 }
 
-class _SwitchTile extends StatelessWidget {
-  final String title;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-  const _SwitchTile({
-    required this.title,
-    required this.value,
-    required this.onChanged,
-  });
+// class _SwitchTile extends StatelessWidget {
+//   final String title;
+//   final bool value;
+//   final ValueChanged<bool> onChanged;
+//   const _SwitchTile({
+//     required this.title,
+//     required this.value,
+//     required this.onChanged,
+//   });
 
-  @override
-  Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: Text(
-        title,
-        style: const TextStyle(fontSize: 15, color: Colors.black),
-      ),
-      value: value,
-      onChanged: onChanged,
-      activeColor: Colors.blue,
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return SwitchListTile(
+//       contentPadding: EdgeInsets.zero,
+//       title: Text(
+//         title,
+//         style: const TextStyle(fontSize: 15, color: Colors.black),
+//       ),
+//       value: value,
+//       onChanged: onChanged,
+//       activeColor: Colors.blue,
+//     );
+//   }
+// }
 
 // Dialog for editing the user's name
 class EditNameDialog extends StatefulWidget {
@@ -309,16 +304,28 @@ class _EditNameDialogState extends State<EditNameDialog> {
 
   @override
   Widget build(BuildContext context) {
+    //return Padding(
+    //padding: const EdgeInsets.all(50.0),
     return ShadDialog(
+      //radius: const BorderRadius.all(Radius.circular(30)),
       title: const Text('Edit Name'),
+      constraints: const BoxConstraints(maxWidth: 400, minWidth: 300),
       description: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('Name'),
-          ShadInput(
+          //const Text('Name'),
+          ShadInputFormField(
             controller: _nameController,
+            id: 'name',
+            label: const Text('Name'),
             placeholder: const Text('Enter your name'),
+            validator: validateName,
+            leading: const Padding(
+              padding: EdgeInsets.all(4.0),
+              child: Icon(Icons.person_outline),
+            ),
+            textInputAction: TextInputAction.next,
           ),
         ],
       ),
@@ -356,45 +363,151 @@ class ChangePasswordDialog extends StatefulWidget {
 }
 
 class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
+  final TextEditingController _currentController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
-  bool _obscure = true;
+  bool _currentObscure = true;
+  bool _passwordObscure = true;
+  bool _confirmObscure = true;
+  bool _loading = false;
+  String? _error;
 
   @override
   void dispose() {
+    _currentController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
   }
 
+  Future<void> _handleChangePassword(BuildContext context) async {
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final currentPassword = _currentController.text.trim();
+    final newPassword = _passwordController.text.trim();
+    final confirmPassword = _confirmController.text.trim();
+
+    if (newPassword != confirmPassword) {
+      setState(() {
+        _loading = false;
+        _error = 'Passwords do not match.';
+      });
+      return;
+    }
+    if (newPassword.isEmpty || currentPassword.isEmpty) {
+      setState(() {
+        _loading = false;
+        _error = 'Please fill in all fields.';
+      });
+      return;
+    }
+
+    final user = FirebaseAuth.instance.currentUser;
+    final email = user?.email;
+    if (email == null) {
+      setState(() {
+        _loading = false;
+        _error = 'No user signed in.';
+      });
+      return;
+    }
+
+    // Use Riverpod to access AuthNotifier
+    final container = ProviderScope.containerOf(context, listen: false);
+    final authNotifier = container.read(authNotifierProvider.notifier);
+    final result = await authNotifier.reauthenticateWithPassword(
+      email: email,
+      currentPassword: currentPassword,
+    );
+    if (!result.isSuccess) {
+      setState(() {
+        _loading = false;
+        _error = result.error ?? 'Incorrect current password.';
+      });
+      return;
+    }
+
+    // If re-auth successful, return new password to parent
+    setState(() {
+      _loading = false;
+    });
+    Navigator.of(context).pop(newPassword);
+  }
+
   @override
   Widget build(BuildContext context) {
     return ShadDialog(
+      constraints: const BoxConstraints(maxWidth: 400, minWidth: 300),
       title: const Text('Change Password'),
       description: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('New Password'),
-          ShadInput(
-            controller: _passwordController,
-            obscureText: _obscure,
-            placeholder: const Text('Enter new password'),
-          ),
-          const SizedBox(height: 16),
-          const Text('Confirm Password'),
-          ShadInput(
-            controller: _confirmController,
-            obscureText: _obscure,
-            placeholder: const Text('Re-enter new password'),
-          ),
-          Align(
-            alignment: Alignment.centerRight,
-            child: IconButton(
-              icon: Icon(_obscure ? Icons.visibility : Icons.visibility_off),
-              onPressed: () => setState(() => _obscure = !_obscure),
+          ShadInputFormField(
+            label: const Text('Current Password'),
+            controller: _currentController,
+            id: 'current_password',
+            obscureText: _currentObscure,
+            placeholder: const Text('Enter current password'),
+            leading: const Padding(
+              padding: EdgeInsets.all(4.0),
+              child: Icon(Icons.lock_outline),
+            ),
+            trailing: IconButton(
+              icon: Icon(
+                _currentObscure ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: () =>
+                  setState(() => _currentObscure = !_currentObscure),
             ),
           ),
+          const SizedBox(height: 16),
+          ShadInputFormField(
+            label: const Text('New Password'),
+            controller: _passwordController,
+            id: 'new_password',
+            obscureText: _passwordObscure,
+            placeholder: const Text('Enter new password'),
+            leading: const Padding(
+              padding: EdgeInsets.all(4.0),
+              child: Icon(Icons.lock_outline),
+            ),
+            trailing: IconButton(
+              icon: Icon(
+                _passwordObscure ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: () =>
+                  setState(() => _passwordObscure = !_passwordObscure),
+            ),
+          ),
+          const SizedBox(height: 16),
+          ShadInputFormField(
+            label: const Text('Confirm Password'),
+            controller: _confirmController,
+            id: 'confirm_password',
+            obscureText: _confirmObscure,
+            placeholder: const Text('Re-enter new password'),
+            leading: const Padding(
+              padding: EdgeInsets.all(4.0),
+              child: Icon(Icons.lock_outline),
+            ),
+            trailing: IconButton(
+              icon: Icon(
+                _confirmObscure ? Icons.visibility : Icons.visibility_off,
+              ),
+              onPressed: () =>
+                  setState(() => _confirmObscure = !_confirmObscure),
+            ),
+          ),
+          const SizedBox(height: 14),
+
+          if (_error != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 8.0),
+              child: Text(_error!, style: const TextStyle(color: Colors.red)),
+            ),
         ],
       ),
       actions: [
@@ -402,24 +515,23 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
           children: [
             Flexible(
               child: ShadButton.ghost(
-                onPressed: () => Navigator.of(context).pop(),
+                onPressed: _loading ? null : () => Navigator.of(context).pop(),
                 child: const Text('Cancel'),
               ),
             ),
             const SizedBox(width: 16),
             Flexible(
               child: ShadButton(
-                onPressed: () {
-                  if (_passwordController.text == _confirmController.text &&
-                      _passwordController.text.isNotEmpty) {
-                    Navigator.of(context).pop(_passwordController.text);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Passwords do not match.')),
-                    );
-                  }
-                },
-                child: const Text('Change'),
+                onPressed: _loading
+                    ? null
+                    : () => _handleChangePassword(context),
+                child: _loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Change'),
               ),
             ),
           ],
@@ -445,20 +557,7 @@ class SetDietaryPreferencesDialog extends StatefulWidget {
 class _SetDietaryPreferencesDialogState
     extends State<SetDietaryPreferencesDialog> {
   late List<String> _selectedPreferences;
-  static const List<String> _allPreferences = [
-    'Vegetarian',
-    'Vegan',
-    'Gluten-Free',
-    'Dairy-Free',
-    'Nut-Free',
-    'Halal',
-    'Kosher',
-    'Pescatarian',
-    'Low-Carb',
-    'Low-Fat',
-    'Keto',
-    'Paleo',
-  ];
+  // Use the shared dietary preferences constant
 
   @override
   void initState() {
@@ -469,25 +568,35 @@ class _SetDietaryPreferencesDialogState
   @override
   Widget build(BuildContext context) {
     return ShadDialog(
+      constraints: const BoxConstraints(maxWidth: 400, minWidth: 300),
       title: const Text('Set Dietary Preferences'),
-      description: Wrap(
-        spacing: 8,
-        children: _allPreferences.map((pref) {
-          final selected = _selectedPreferences.contains(pref);
-          return FilterChip(
-            label: Text(pref),
-            selected: selected,
-            onSelected: (val) {
-              setState(() {
-                if (val) {
-                  _selectedPreferences.add(pref);
-                } else {
-                  _selectedPreferences.remove(pref);
-                }
-              });
-            },
-          );
-        }).toList(),
+      description: Material(
+        color: Colors.transparent,
+        child: Wrap(
+          spacing: 8,
+          children: kAllDietaryPreferences.map((pref) {
+            final selected = _selectedPreferences.contains(pref);
+            return Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: 4.0,
+                horizontal: 2.0,
+              ),
+              child: FilterChip(
+                label: Text(pref),
+                selected: selected,
+                onSelected: (val) {
+                  setState(() {
+                    if (val) {
+                      _selectedPreferences.add(pref);
+                    } else {
+                      _selectedPreferences.remove(pref);
+                    }
+                  });
+                },
+              ),
+            );
+          }).toList(),
+        ),
       ),
       actions: [
         Row(

@@ -243,7 +243,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
                   child: Builder(
                     builder: (context) {
                       // Build filteredCookbooks and filteredDocIds in parallel
-                      List<int> filteredIndexes = [];
+                      //List<int> filteredIndexes = [];
                       final filteredCookbooks = <Cookbook>[];
                       final filteredDocIds = <String>[];
                       for (int i = 0; i < _cookbooks.length; i++) {

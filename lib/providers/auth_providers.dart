@@ -28,6 +28,29 @@ class AuthResult {
 
 // Enhanced Auth Notifier with business logic
 class AuthNotifier extends Notifier<AsyncValue<User?>> {
+  // Re-authenticate user with current password
+  Future<AuthResult> reauthenticateWithPassword({
+    required String email,
+    required String currentPassword,
+  }) async {
+    try {
+      final credential = EmailAuthProvider.credential(
+        email: email.trim(),
+        password: currentPassword,
+      );
+      final user = _auth.currentUser;
+      if (user == null) {
+        return AuthResult.error('No user signed in');
+      }
+      await user.reauthenticateWithCredential(credential);
+      return AuthResult.success(user);
+    } on FirebaseAuthException catch (e) {
+      return AuthResult.error(_getErrorMessage(e));
+    } catch (e) {
+      return AuthResult.error('Failed to re-authenticate');
+    }
+  }
+
   FirebaseAuth get _auth => ref.read(firebaseAuthProvider);
 
   @override
@@ -94,9 +117,7 @@ class AuthNotifier extends Notifier<AsyncValue<User?>> {
           // Create a default cookbook for the user
           final cookbooksCollection = userDoc.collection('cookbooks');
           await cookbooksCollection.add({
-            
-                    'title':
-                'Favorites',
+            'title': 'Favorites',
             'createdAt': FieldValue.serverTimestamp(),
             'recipeCount': 0,
             'color': 0xFF2196F3, // Default blue

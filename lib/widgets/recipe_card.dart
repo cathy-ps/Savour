@@ -6,8 +6,7 @@ class RecipeCard extends StatelessWidget {
   final VoidCallback? onTap;
   final bool isFavorite;
   final VoidCallback? onFavoriteTap;
-  static const String imageUrl =
-      'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=400&q=80';
+  final String imageUrl;
 
   const RecipeCard({
     super.key,
@@ -15,6 +14,7 @@ class RecipeCard extends StatelessWidget {
     this.onTap,
     this.isFavorite = false,
     this.onFavoriteTap,
+    required this.imageUrl,
   });
 
   @override

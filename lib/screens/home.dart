@@ -423,6 +423,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             },
                             child: RecipeCard(
                               recipe: recipe,
+                              imageUrl: recipe.imageUrl,
                               isFavorite:
                                   recipe.isFavorite ||
                                   _isRecipeSavedGlobally(recipe),

@@ -4,6 +4,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/recipe_model.dart';
 import 'youtube_search_service.dart';
+import 'google_image_search_service.dart';
 
 // Helper to fetch a food image from Pexels API
 Future<String?> fetchPexelsImage(String query, String apiKey) async {
@@ -21,6 +22,12 @@ Future<String?> fetchPexelsImage(String query, String apiKey) async {
 }
 
 class GeminiService {
+  GoogleImageSearchService? _googleImageService;
+
+  void setGoogleImageSearchService(GoogleImageSearchService service) {
+    _googleImageService = service;
+  }
+
   YoutubeSearchService? _youtubeService;
 
   void setYoutubeApiKey(String apiKey) {
@@ -61,6 +68,7 @@ class GeminiService {
     String? cuisine,
     String? dietaryNotes,
     String? youtubeApiKey,
+    String? googleImageApiKey,
   }) async {
     final prompt =
         '''
@@ -83,6 +91,11 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
 ''';
     try {
       if (youtubeApiKey != null) setYoutubeApiKey(youtubeApiKey);
+      if (googleImageApiKey != null) {
+        setGoogleImageSearchService(
+          GoogleImageSearchService(apiKey: googleImageApiKey),
+        );
+      }
       final content = Content.text(prompt);
       final response = await _model.generateContent([content]);
       final text = response.text;
@@ -98,10 +111,15 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
       }
       final data = jsonDecode(jsonArray);
       if (data is List) {
-        // Always search YouTube for the recipe title and assign to videoUrl
         List<Recipe> recipes = [];
         for (final e in data) {
           String title = e['title'] as String? ?? '';
+          // Get image from Google Image Search
+          String? imageUrl = _googleImageService != null
+              ? await _googleImageService!.searchImage(title)
+              : null;
+          e['imageUrl'] = imageUrl ?? '';
+          // Get video from YouTube
           String? videoUrl = _youtubeService != null
               ? await _youtubeService!.searchFirstVideoUrl(title)
               : null;

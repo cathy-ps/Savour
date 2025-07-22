@@ -57,9 +57,11 @@ class HomeSearchNotifier extends StateNotifier<HomeSearchState> {
           .where((e) => e.isNotEmpty)
           .toList();
       final youtubeApiKey = dotenv.env['youtube_api_key'];
+      final googleImageApiKey = dotenv.env['custom_api_key'];
       final recipes = await _geminiService.generateRecipes(
         ingredients,
         youtubeApiKey: youtubeApiKey,
+        googleImageApiKey: googleImageApiKey,
       );
       state = state.copyWith(
         recipes: recipes,

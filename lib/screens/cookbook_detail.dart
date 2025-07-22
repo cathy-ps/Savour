@@ -128,6 +128,7 @@ class CookbookDetailScreen extends ConsumerWidget {
                       },
                       child: RecipeCard(
                         recipe: recipe,
+                        imageUrl: recipe.imageUrl,
                         isFavorite:
                             recipe.isFavorite ||
                             true, // Always red heart for recipes in this cookbook

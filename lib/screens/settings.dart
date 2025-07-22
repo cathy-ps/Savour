@@ -283,7 +283,7 @@ class _SettingsTile extends StatelessWidget {
 // Dialog for editing the user's name
 class EditNameDialog extends StatefulWidget {
   final String initialName;
-  const EditNameDialog({required this.initialName});
+  const EditNameDialog({super.key, required this.initialName});
 
   @override
   State<EditNameDialog> createState() => _EditNameDialogState();

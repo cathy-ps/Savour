@@ -41,10 +41,6 @@ class CookbookDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: CustomAppBar(
         title: cookbook.title,
-        // backgroundColor: AppColors.primary,
-        // titleColor: AppColors.white,
-        // elevation: 0,
-        //onBack: () => Navigator.of(context).pop(),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete),
@@ -133,6 +129,7 @@ class CookbookDetailScreen extends ConsumerWidget {
                       child: RecipeCard(
                         recipe: recipe,
                         isFavorite:
+                            recipe.isFavorite ||
                             true, // Always red heart for recipes in this cookbook
                         onFavoriteTap: () async {
                           await handleFavoriteTap(

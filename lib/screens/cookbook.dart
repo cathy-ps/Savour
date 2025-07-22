@@ -9,7 +9,6 @@ import 'package:savourai/models/cookbook_model.dart';
 import 'package:savourai/widgets/create_cookbook.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:savourai/widgets/custom_search_bar.dart';
-import 'package:cupertino_icons/cupertino_icons.dart';
 
 class CookbookScreen extends StatefulWidget {
   const CookbookScreen({super.key});

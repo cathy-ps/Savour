@@ -59,6 +59,7 @@ Return the recipes as a JSON array. Each recipe must be a JSON object with these
 - ingredients (array of objects: { name, quantity, unit })
 - instructions (array of strings, step-by-step)
 - nutrition (object: { calories, protein, carbs, fat } per serving, all numbers)
+- videoUrl (string, a YouTube link to a video tutorial for this recipe)
 
 Make sure the ingredient list and quantities are for 1 serving and scalable. Do not include any ingredients outside the provided list and common pantry items. Format the output as a valid JSON array, no extra text.
 ''';
@@ -109,6 +110,8 @@ You are a recipe generator. Based on the following criteria, generate a random n
 For each recipe, provide all the requested details. Be creative and make the recipes sound delicious.
 If the ingredients are sparse, feel free to supplement with common pantry staples.
 Ensure the instructions are clear and easy to follow.
+
+Each recipe must also include a field called videoUrl, which is a YouTube link to a video tutorial for this recipe (or null if not available).
 
 Do not include any text, markdown, or explanation before or after the JSON array. Only output the JSON array.
 ''';

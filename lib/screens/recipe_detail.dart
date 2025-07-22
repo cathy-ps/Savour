@@ -10,6 +10,8 @@ import '../models/recipe_model.dart';
 import '../providers/saved_recipes_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/cookbook_model.dart';
+
+import '../widgets/custom_app_bar.dart';
 import '../widgets/cookbook_selector_dialog.dart';
 
 class RecipeDetailScreen extends ConsumerStatefulWidget {
@@ -146,17 +148,18 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
   Widget build(BuildContext context) {
     final savedIds = ref.watch(savedRecipeIdsProvider);
     final recipeKey = _recipe != null ? _recipe!.id : '';
+    // Always use provider for UI state, model field is for Firestore only
     final isFavorite = _recipe != null && savedIds.contains(recipeKey);
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_recipe?.title ?? 'Recipe'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
+      appBar: CustomAppBar(
+        title: '',
+        //titleColor: AppColors.white,
+        elevation: 0,
         actions: [
           IconButton(
             icon: Icon(
               isFavorite ? Icons.favorite : Icons.favorite_border,
-              color: AppColors.white,
+              color: isFavorite ? Colors.redAccent : AppColors.black,
             ),
             onPressed: _recipe == null
                 ? null
@@ -182,9 +185,28 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                         newSet.remove(id);
                         return newSet;
                       });
+                      setState(() {}); // Force UI update
                     } else {
                       // Prompt user to select cookbook and save
-                      await _saveToCookbook(_recipe!);
+                      if (_recipe != null) {
+                        final updatedRecipe = Recipe(
+                          id: _recipe!.id,
+                          title: _recipe!.title,
+                          category: _recipe!.category,
+                          cuisine: _recipe!.cuisine,
+                          difficulty: _recipe!.difficulty,
+                          cookingDuration: _recipe!.cookingDuration,
+                          description: _recipe!.description,
+                          servings: _recipe!.servings,
+                          ingredients: _recipe!.ingredients,
+                          instructions: _recipe!.instructions,
+                          nutrition: _recipe!.nutrition,
+                          imageUrl: _recipe!.imageUrl,
+                          isFavorite: true,
+                        );
+                        await _saveToCookbook(updatedRecipe);
+                        setState(() {}); // Force UI update
+                      }
                     }
                   },
           ),

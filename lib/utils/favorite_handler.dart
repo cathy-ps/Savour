@@ -120,7 +120,7 @@ Future<void> handleFavoriteTap({
     return newSet;
   });
   // Show a toast/snackbar to notify user
-  final cookbookIdx = userCookbookDocIds?.indexOf(selectedCookbookId!) ?? -1;
+  final cookbookIdx = userCookbookDocIds?.indexOf(selectedCookbookId) ?? -1;
   if (cookbookIdx != -1 && userCookbooks != null) {
     final cookbook = userCookbooks[cookbookIdx];
     final messenger = ShadToaster.maybeOf(context);

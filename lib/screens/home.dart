@@ -423,7 +423,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             },
                             child: RecipeCard(
                               recipe: recipe,
-                              isFavorite: _isRecipeSavedGlobally(recipe),
+                              isFavorite:
+                                  recipe.isFavorite ||
+                                  _isRecipeSavedGlobally(recipe),
                               onFavoriteTap: () => _onFavoriteTap(recipe),
                             ),
                           );

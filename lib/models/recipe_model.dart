@@ -11,6 +11,8 @@ class Recipe {
   final List<String> instructions;
   final Nutrition nutrition;
   final String imageUrl;
+  final bool isFavorite;
+  final String? videoUrl;
 
   Recipe({
     required this.id,
@@ -25,6 +27,8 @@ class Recipe {
     required this.instructions,
     required this.nutrition,
     required this.imageUrl,
+    this.isFavorite = false,
+    this.videoUrl,
   });
 
   factory Recipe.fromJson(Map<String, dynamic> json, String id) => Recipe(
@@ -48,6 +52,12 @@ class Recipe {
         .toList(),
     nutrition: Nutrition.fromJson(json['nutrition'] ?? {}),
     imageUrl: json['imageUrl'] ?? json['image_url'] ?? '',
+    isFavorite: json['isFavorite'] is bool
+        ? json['isFavorite']
+        : (json['isFavorite'] == null
+              ? false
+              : json['isFavorite'].toString() == 'true'),
+    videoUrl: json['videoUrl'] ?? json['video_url'],
   );
 
   // For use with Firestore DocumentSnapshot
@@ -66,6 +76,8 @@ class Recipe {
     'instructions': instructions,
     'nutrition': nutrition.toJson(),
     'imageUrl': imageUrl,
+    'isFavorite': isFavorite,
+    if (videoUrl != null) 'videoUrl': videoUrl,
   };
 }
 

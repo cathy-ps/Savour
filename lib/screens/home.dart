@@ -75,7 +75,6 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   String _getRecipeId(Recipe recipe) {
     if (recipe.id.isNotEmpty) return recipe.id;
     if (recipe.title.isNotEmpty) return recipe.title.hashCode.toString();
-    // fallback: generate a unique string
     return UniqueKey().toString();
   }
 
@@ -149,9 +148,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       debugPrint('No valid cookbook ID selected: "$selectedCookbookId"');
       return;
     }
-    print('userId: $_userId');
-    print('selectedCookbookId: $selectedCookbookId');
-    print('recipeId: $id');
+    // print('userId: $_userId');
+    // print('selectedCookbookId: $selectedCookbookId');
+    // print('recipeId: $id');
 
     // Save the recipe to the selected cookbook's recipes subcollection in Firestore
     final recipeRef = FirebaseFirestore.instance
@@ -350,8 +349,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                         CustomSearchBar(
                           controller: _searchController,
                           hintText: 'e.g. eggs, rice, etc',
-                          submitIcon: const ShadIconButton.secondary(
-                            icon: Icon(LucideIcons.rocket),
+                          submitIcon: const Icon(
+                            Icons.rocket_launch_outlined,
+                            size: 24,
                           ),
                           onSubmit: _searchRecipes,
                         ),
@@ -376,18 +376,20 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       ),
                       child: SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
-                        child: Container(
-                          color: AppColors.card,
-                          padding: const EdgeInsets.all(12),
-                          child: Text(
-                            searchState.rawResult!,
-                            style: const TextStyle(
-                              fontFamily: 'monospace',
-                              fontSize: 13,
-                              color: AppColors.text,
-                            ),
-                          ),
-                        ),
+
+                        //raw text for debugging purposes
+                        // child: Container(
+                        //   color: AppColors.card,
+                        //   padding: const EdgeInsets.all(12),
+                        //   child: Text(
+                        //     searchState.rawResult!,
+                        //     style: const TextStyle(
+                        //       fontFamily: 'monospace',
+                        //       fontSize: 13,
+                        //       color: AppColors.text,
+                        //     ),
+                        //   ),
+                        // ),
                       ),
                     ),
                   if (searchState.recipes.isNotEmpty)

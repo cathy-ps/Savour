@@ -6,6 +6,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final Color backgroundColor;
   final Color titleColor;
   final double elevation;
+  final List<Widget>? actions;
 
   const CustomAppBar({
     super.key,
@@ -14,6 +15,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.backgroundColor = Colors.white,
     this.titleColor = Colors.black,
     this.elevation = 0,
+    this.actions,
   });
 
   @override
@@ -22,7 +24,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       elevation: elevation,
       backgroundColor: backgroundColor,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
+        icon: Icon(Icons.arrow_back_ios_new, color: titleColor),
         onPressed: onBack ?? () => Navigator.of(context).pop(),
       ),
       title: Text(
@@ -33,6 +35,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
           fontWeight: FontWeight.bold,
         ),
       ),
+      actions: actions,
     );
   }
 

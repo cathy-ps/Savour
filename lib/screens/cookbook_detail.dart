@@ -11,6 +11,7 @@ import 'package:savourai/models/recipe_model.dart';
 import 'package:savourai/widgets/recipe_card.dart';
 import '../providers/saved_recipes_provider.dart';
 import 'package:savourai/screens/recipe_detail.dart';
+import 'package:savourai/widgets/custom_app_bar.dart';
 
 class CookbookDetailScreen extends ConsumerWidget {
   final Cookbook cookbook;
@@ -37,14 +38,12 @@ class CookbookDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          cookbook.title,
-          style: const TextStyle(color: AppColors.text),
-        ),
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.white,
-        elevation: 0,
+      appBar: CustomAppBar(
+        title: cookbook.title,
+        // backgroundColor: AppColors.primary,
+        // titleColor: AppColors.white,
+        // elevation: 0,
+        //onBack: () => Navigator.of(context).pop(),
         actions: [
           IconButton(
             icon: const Icon(Icons.delete),

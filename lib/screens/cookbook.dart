@@ -8,6 +8,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:savourai/models/cookbook_model.dart';
 import 'package:savourai/widgets/create_cookbook.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:savourai/widgets/custom_search_bar.dart';
 
 class CookbookScreen extends StatefulWidget {
   const CookbookScreen({super.key});
@@ -119,6 +120,13 @@ class _CookbookScreenState extends State<CookbookScreen> {
   }
 
   Future<void> _addCookbook(String title, Color color) async {
+    String capitalizedTitle = title
+        .split(' ')
+        .map(
+          (word) =>
+              word.isNotEmpty ? word[0].toUpperCase() + word.substring(1) : '',
+        )
+        .join(' ');
     final newDoc = FirebaseFirestore.instance
         .collection('users')
         .doc(_userId)
@@ -126,7 +134,8 @@ class _CookbookScreenState extends State<CookbookScreen> {
         .doc();
     final newCookbook = Cookbook(
       id: newDoc.id,
-      title: title,
+      title: capitalizedTitle,
+      //title: title,
       createdAt: DateTime.now(),
       recipeCount: 0,
       color: color.value,
@@ -136,7 +145,10 @@ class _CookbookScreenState extends State<CookbookScreen> {
     final messenger = ShadToaster.maybeOf(context);
     if (messenger != null) {
       messenger.show(
-        ShadToast(description: Text('Cookbook "$title" has been created')),
+        //ShadToast(description: Text('Cookbook "$title" has been created')),
+        ShadToast(
+          description: Text('Cookbook "$capitalizedTitle" has been created'),
+        ),
       );
     }
     _fetchCookbooks();
@@ -153,13 +165,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.only(
-                  bottomLeft: Radius.circular(24),
-                  bottomRight: Radius.circular(24),
-                ),
-              ),
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -169,60 +175,58 @@ class _CookbookScreenState extends State<CookbookScreen> {
                       const Text(
                         'Cookbook',
                         style: TextStyle(
-                          color: AppColors.white,
+                          color: AppColors.black,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add,
-                          color: AppColors.white,
-                          size: 28,
-                        ),
-                        onPressed: () async {
-                          await showModalBottomSheet(
-                            context: context,
-                            isScrollControlled: true,
-                            shape: const RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(24),
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: AppColors.primary,
+                        child: IconButton(
+                          icon: const Icon(
+                            Icons.add,
+                            color: AppColors.white,
+                            size: 24,
+                          ),
+                          onPressed: () async {
+                            await showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(24),
+                                ),
                               ),
-                            ),
-                            builder: (context) => CreateCookbookDialog(
-                              colorOptions: _colorOptions,
-                              onCreate: (title, color) {
-                                Navigator.of(context).pop();
-                                _addCookbook(title, color);
-                              },
-                            ),
-                          );
-                        },
+                              builder: (context) => CreateCookbookDialog(
+                                colorOptions: _colorOptions,
+                                onCreate: (title, color) {
+                                  Navigator.of(context).pop();
+                                  _addCookbook(title, color);
+                                },
+                              ),
+                            );
+                          },
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 8),
-                  ShadInputFormField(
-                    enableInteractiveSelection: false,
-                    //autovalidateMode: AutovalidateMode.onUserInteraction,
-                    decoration: ShadDecoration(
-                      color: AppColors.white,
-                      border: ShadBorder.all(
-                        //need to remove the border when the user is typing
-                        radius: BorderRadius.all(Radius.circular(20)),
-                        style: BorderStyle.solid,
-                        color: Colors.transparent, // No visible border
-                      ),
-                    ),
+                  CustomSearchBar(
+                    hintIcon: const Icon(Icons.search, size: 20),
                     controller: _searchController,
-                    id: 'cookbook_search',
-                    label: const Text(''),
-                    placeholder: const Text('Search cookbooks...'),
-                    leading: const Padding(
-                      padding: EdgeInsets.all(4.0),
-                      child: Icon(Icons.search),
-                    ),
-                    textInputAction: TextInputAction.search,
+                    hintText: 'Search cookbooks...',
+                    //submitIcon: const Icon(Icons.search),
+                    // onChanged: (val) {
+                    //   setState(() {
+                    //     _searchQuery = val.trim();
+                    //   });
+                    // },
+                    onSubmit: () {
+                      setState(() {
+                        _searchQuery = _searchController.text.trim();
+                      });
+                    },
                   ),
                 ],
               ),
@@ -262,7 +266,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
                       return GridView.builder(
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
+                              crossAxisCount: 3,
                               crossAxisSpacing: 12,
                               mainAxisSpacing: 12,
                               childAspectRatio: 1.1,
@@ -272,29 +276,29 @@ class _CookbookScreenState extends State<CookbookScreen> {
                           final cb = filteredCookbooks[index];
                           final docId = filteredDocIds[index];
                           final color = Color(
-                            (cb.toJson()['color'] ?? AppColors.primary.value)
+                            (cb.toJson()['color'] ?? AppColors.transparent)
                                 as int,
                           );
                           return GestureDetector(
                             onTap: () => _openCookbookRecipes(cb, docId),
                             child: Container(
                               decoration: BoxDecoration(
-                                color: AppColors.card,
+                                color: AppColors.transparent,
                                 borderRadius: BorderRadius.circular(18),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppColors.border.withOpacity(0.2),
-                                    blurRadius: 4,
-                                    offset: Offset(0, 2),
-                                  ),
-                                ],
+                                // boxShadow: [
+                                //   BoxShadow(
+                                //     color: AppColors.border.withOpacity(0.2),
+                                //     blurRadius: 4,
+                                //     offset: Offset(0, 2),
+                                //   ),
+                                // ],
                               ),
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     CupertinoIcons.folder_fill,
-                                    size: 54,
+                                    size: 64,
                                     color: color,
                                   ),
                                   const SizedBox(height: 10),

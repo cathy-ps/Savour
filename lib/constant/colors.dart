@@ -28,6 +28,7 @@ class AppColors {
     114,
   ); // Use muted color for "light grey"
   static const Color border = Color(0xFFE0E3DD); // Subtle border
+  static const Color transparent = Color(0x00000000); // Transparent color
 
   // --- Status Colors ---
   static const Color error = Color(0xFFE6B8B7); // Muted error

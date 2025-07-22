@@ -9,6 +9,7 @@ import 'package:savourai/constant/colors.dart';
 import 'package:savourai/constant/dietary_preferences.dart';
 import 'package:savourai/widgets/sign_out_card.dart';
 import 'package:savourai/providers/auth_providers.dart';
+import 'package:savourai/widgets/custom_app_bar.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -18,22 +19,7 @@ class SettingsScreen extends ConsumerWidget {
     final userProfile = ref.watch(userProfileProvider);
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.white,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: Colors.black),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: const Text(
-          'Settings',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+      appBar: const CustomAppBar(title: 'Settings'),
       body: userProfile.when(
         data: (user) {
           final name = user?.name ?? 'No Name';

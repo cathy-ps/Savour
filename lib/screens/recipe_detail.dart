@@ -84,9 +84,9 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
       return;
     }
     // Show selector dialog
-    final selectedCookbookId = await showDialog<String>(
-      context: context,
-      builder: (context) => CookbookSelectorDialog(cookbooks: cookbooks),
+    final selectedCookbookId = await CookbookSelectorDialog.show(
+      context,
+      cookbooks,
     );
     if (selectedCookbookId == null || selectedCookbookId.trim().isEmpty) {
       ShadToaster.of(
@@ -568,7 +568,21 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                               const SizedBox(height: 12),
                               GestureDetector(
                                 onTap: () async {
-                                  final url = Uri.parse(_recipe!.videoUrl!);
+                                  // Ensure the URL is a full YouTube link
+                                  String videoUrl = _recipe!.videoUrl!;
+                                  if (!videoUrl.startsWith('https://')) {
+                                    videoUrl = 'https://$videoUrl';
+                                  }
+                                  if (videoUrl.startsWith('youtu.be/')) {
+                                    videoUrl =
+                                        'https://www.youtube.com/watch?v=${videoUrl.substring(9)}';
+                                  } else if (videoUrl.startsWith(
+                                    'youtube.com/watch',
+                                  )) {
+                                    videoUrl = 'https://www.$videoUrl';
+                                  }
+
+                                  final url = Uri.parse(videoUrl);
                                   if (await canLaunchUrl(url)) {
                                     await launchUrl(
                                       url,
@@ -731,12 +745,24 @@ class _StepByStepInstructionsSheetState
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return SingleChildScrollView(
       padding: MediaQuery.of(context).viewInsets.add(const EdgeInsets.all(24)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Handle at top for dragging
+          Center(
+            child: Container(
+              width: 40,
+              height: 5,
+              margin: const EdgeInsets.only(bottom: 20),
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2.5),
+              ),
+            ),
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -756,9 +782,16 @@ class _StepByStepInstructionsSheetState
             style: const TextStyle(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          Text(
-            widget.instructions[_currentStep],
-            style: const TextStyle(fontSize: 16),
+          Container(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.4,
+            ),
+            child: SingleChildScrollView(
+              child: Text(
+                widget.instructions[_currentStep],
+                style: const TextStyle(fontSize: 16),
+              ),
+            ),
           ),
           const SizedBox(height: 24),
           Row(

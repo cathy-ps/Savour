@@ -251,12 +251,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       return;
     }
     // Show the selector dialog and get the selected cookbook's docId
-    final selectedCookbookId = await showDialog<String>(
-      context: context,
-      builder: (context) => CookbookSelectorDialog(
-        cookbooks: _userCookbooks,
-        //cookbookDocIds: _userCookbookDocIds,
-      ),
+    final selectedCookbookId = await CookbookSelectorDialog.show(
+      context,
+      _userCookbooks,
     );
 
     if (selectedCookbookId == null || selectedCookbookId.trim().isEmpty) {
@@ -549,14 +546,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                 horizontal: 20,
                                 vertical: 8,
                               ),
-                              child: Text(
-                                'Reminders',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.text,
-                                ),
-                              ),
+                              // child: Text(
+                              //   'Reminders',
+                              //   style: TextStyle(
+                              //     fontSize: 20,
+                              //     fontWeight: FontWeight.bold,
+                              //     color: AppColors.text,
+                              //   ),
+                              // ),
                             ),
                             SizedBox(
                               height: 140,

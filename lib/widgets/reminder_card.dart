@@ -7,7 +7,7 @@ import '../screens/shoppinglist.dart';
 class ReminderCard extends StatelessWidget {
   final ShoppingList shoppingList;
 
-  const ReminderCard({Key? key, required this.shoppingList}) : super(key: key);
+  const ReminderCard({super.key, required this.shoppingList});
 
   @override
   Widget build(BuildContext context) {
@@ -24,24 +24,26 @@ class ReminderCard extends StatelessWidget {
       onTap: () {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const ShoppingListScreen()),
+          MaterialPageRoute(builder: (context) => ShoppingListScreen()),
         );
       },
       child: Container(
-        width: 280,
-        margin: const EdgeInsets.only(right: 16),
+        width: 300,
+        height: 120,
+        margin: const EdgeInsets.only(right: 10),
         decoration: BoxDecoration(
           color: AppColors.card,
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Reminder header
@@ -70,7 +72,7 @@ class ReminderCard extends StatelessWidget {
                       fontSize: 16,
                     ),
                   ),
-                  const Spacer(),
+                  Spacer(),
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -86,6 +88,8 @@ class ReminderCard extends StatelessWidget {
                         color: AppColors.white,
                         fontSize: 12,
                       ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],
@@ -93,7 +97,7 @@ class ReminderCard extends StatelessWidget {
             ),
             // Recipe name and time
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -104,10 +108,10 @@ class ReminderCard extends StatelessWidget {
                       fontSize: 16,
                       color: AppColors.text,
                     ),
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 6),
                   Row(
                     children: [
                       const Icon(
@@ -122,6 +126,8 @@ class ReminderCard extends StatelessWidget {
                           color: AppColors.muted,
                           fontSize: 14,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       const SizedBox(width: 12),
                       const Icon(
@@ -136,6 +142,8 @@ class ReminderCard extends StatelessWidget {
                           color: AppColors.muted,
                           fontSize: 14,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

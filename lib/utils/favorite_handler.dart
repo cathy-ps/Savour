@@ -83,9 +83,9 @@ Future<void> handleFavoriteTap({
   }
   String? selectedCookbookId;
   if (showSelector) {
-    selectedCookbookId = await showDialog<String>(
-      context: context,
-      builder: (context) => CookbookSelectorDialog(cookbooks: userCookbooks!),
+    selectedCookbookId = await CookbookSelectorDialog.show(
+      context,
+      userCookbooks!,
     );
     if (selectedCookbookId == null || selectedCookbookId.trim().isEmpty) {
       debugPrint('No valid cookbook ID selected: "$selectedCookbookId"');

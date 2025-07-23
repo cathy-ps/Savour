@@ -6,11 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/reminder_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-// Removed unused notification imports; handled by reminder_service.dart
 import '../services/reminder_service.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
-
-// Removed unused plugin instance; handled by reminder_service.dart
 
 class ShoppingListCard extends StatefulWidget {
   final ShoppingList list;
@@ -55,8 +52,8 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
           stream: FirebaseFirestore.instance
               .collection('users')
               .doc(userId)
-              .collection('shoppingList')
-              .doc(list.name)
+              .collection('shoppingLists')
+              .doc(list.id)
               .snapshots(),
           builder: (context, snapshot) {
             if (snapshot.hasData) {
@@ -115,8 +112,8 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                     await FirebaseFirestore.instance
                         .collection('users')
                         .doc(userId)
-                        .collection('shoppingList')
-                        .doc(list.name)
+                        .collection('shoppingLists')
+                        .doc(list.id)
                         .set({'reminder': selected}, SetOptions(merge: true));
                     print('[DEBUG] Firestore write successful');
 
@@ -193,12 +190,12 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                             ref
                                 .read(reminderProvider(list.name).notifier)
                                 .clear();
-                            // Update Firestore under users/{userId}/shoppingList/{list.name}
+                            // Update Firestore under users/{userId}/shoppingLists/{list.name}
                             await FirebaseFirestore.instance
                                 .collection('users')
                                 .doc(userId)
-                                .collection('shoppingList')
-                                .doc(list.name)
+                                .collection('shoppingLists')
+                                .doc(list.id)
                                 .set({
                                   'reminder': null,
                                 }, SetOptions(merge: true));

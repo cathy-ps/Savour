@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class ShoppingListIngredient {
   final String id;
   final String name;
@@ -58,7 +60,13 @@ class ShoppingList {
             )
             .toList(),
         reminder: json['reminder'] != null
-            ? DateTime.tryParse(json['reminder'])
+            ? (json['reminder'] is DateTime
+                  ? json['reminder']
+                  : (json['reminder'] is String
+                        ? DateTime.tryParse(json['reminder'])
+                        : (json['reminder'] is Timestamp
+                              ? (json['reminder'] as Timestamp).toDate()
+                              : null)))
             : null,
         createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
       );

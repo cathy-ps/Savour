@@ -214,7 +214,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: CustomSearchBar(
+                        child: CustomSearchBar(                          
                           hintIcon: const Icon(Icons.search, size: 20),
                           controller: _searchController,
                           hintText: 'Search cookbooks...',

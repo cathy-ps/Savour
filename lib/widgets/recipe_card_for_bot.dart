@@ -35,12 +35,12 @@ class RecipeCardForBot extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         child: SizedBox(
-          height: 170, // Fixed height to prevent overflow
+          height: 144, // Fixed height to prevent overflow
           child: Column(
             children: [
               // Image section with fixed height
               SizedBox(
-                height: 110, // Fixed height for image
+                height: 100, // Reduced height for image
                 width: double.infinity,
                 child: Stack(
                   children: [
@@ -67,8 +67,8 @@ class RecipeCardForBot extends StatelessWidget {
                       left: 8,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
+                          horizontal: 6,
+                          vertical: 2,
                         ),
                         decoration: BoxDecoration(
                           color: Colors.black.withOpacity(0.5),
@@ -78,7 +78,7 @@ class RecipeCardForBot extends StatelessWidget {
                           '${recipe.cookingDuration} min',
                           style: const TextStyle(
                             color: Colors.white,
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -96,13 +96,13 @@ class RecipeCardForBot extends StatelessWidget {
                             onTap: onFavoriteTap,
                             borderRadius: BorderRadius.circular(20),
                             child: Padding(
-                              padding: const EdgeInsets.all(8.0),
+                              padding: const EdgeInsets.all(6.0),
                               child: Icon(
                                 isFavorite
                                     ? Icons.favorite
                                     : Icons.favorite_border,
                                 color: isFavorite ? Colors.red : Colors.white,
-                                size: 22,
+                                size: 18,
                                 shadows: [
                                   Shadow(
                                     color: Colors.black.withOpacity(0.3),
@@ -122,11 +122,11 @@ class RecipeCardForBot extends StatelessWidget {
               // Title section with remaining height
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                  padding: const EdgeInsets.all(6.0),
                   child: Text(
                     recipe.title,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 11,
                       height: 1.2,
                       fontWeight: FontWeight.w500,
                       color: AppColors.text,

@@ -42,7 +42,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
       final chatbot = ref.read(chatbotProvider.notifier);
       if (chatbot.state.messages.isEmpty) {
         chatbot.addMessage(
-          "👋 Hi! I'm your SavourAI Assistant.\n\nYou can ask me for cooking tips, ingredient substitutions, or type a list of ingredients (comma separated) to get recipe suggestions.\n\nTry: 'chicken, rice, peas' or 'How do I substitute eggs in baking?'\n\nWhat would you like help with today?",
+          "👋 Hey! I’m your SavourAI Assistant.\n\nNo clue what to cook? Got some random stuff or leftovers? Just type in your ingredients (like “chicken, rice, peas”) or ask me anything: cooking tips, ingredient swaps, recipe how-tos, whatever.\n\nLet’s make something tasty and clear out that fridge!",
           false,
         );
       }
@@ -294,113 +294,109 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
             child: ListView.builder(
               controller: _scrollController,
               padding: const EdgeInsets.all(8),
-              itemCount:
-                  state.messages.length +
-                  (state.lastRecipes.isNotEmpty ? 1 : 0),
+              itemCount: state.messages.length,
               itemBuilder: (context, index) {
-                if (index < state.messages.length) {
-                  final msg = state.messages[index];
-                  return Align(
-                    alignment: msg.isUser
-                        ? Alignment.centerRight
-                        : Alignment.centerLeft,
-                    child: Container(
-                      constraints: BoxConstraints(
-                        maxWidth: MediaQuery.of(context).size.width * 0.75,
-                      ),
-                      margin: const EdgeInsets.symmetric(vertical: 4),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: msg.isUser
-                            ? AppColors.primary.withOpacity(0.2)
-                            : AppColors.card,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        msg.text,
-                        style: TextStyle(color: AppColors.text, fontSize: 14),
+                final msg = state.messages[index];
+                return Align(
+                  alignment: msg.isUser
+                      ? Alignment.centerRight
+                      : Alignment.centerLeft,
+                  child: Container(
+                    constraints: BoxConstraints(
+                      maxWidth: MediaQuery.of(context).size.width * 0.75,
+                    ),
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: msg.isUser
+                          ? AppColors.primary.withOpacity(0.2)
+                          : AppColors.card,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      msg.text,
+                      style: TextStyle(color: AppColors.text, fontSize: 14),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Recipe suggestions section - fixed at bottom above input
+          if (state.lastRecipes.isNotEmpty)
+            Container(
+              height: 200,
+              width: double.infinity,
+              margin: const EdgeInsets.only(top: 8.0),
+              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              color: AppColors.secondary,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 12.0, bottom: 8.0),
+                    child: Text(
+                      'Recipe Suggestions',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.text,
                       ),
                     ),
-                  );
-                } else {
-                  // Recipe suggestions section
-                  return Container(
-                    height: 200,
-                    margin: const EdgeInsets.symmetric(vertical: 8.0),
-                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                    color: AppColors.secondary,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 12.0,
-                            bottom: 8.0,
-                          ),
-                          child: Text(
-                            'Recipe Suggestions',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.text,
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: ListView.builder(
-                            scrollDirection: Axis.horizontal,
-                            physics: const BouncingScrollPhysics(),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8.0,
-                            ),
-                            itemCount: state.lastRecipes.length,
-                            itemBuilder: (context, i) {
-                              final recipe = state.lastRecipes[i];
-                              final isSaved = _isRecipeSaved(recipe);
-                              return SizedBox(
-                                width: 150,
-                                child: RecipeCardForBot(
-                                  recipe: recipe,
-                                  imageUrl: recipe.imageUrl,
-                                  isFavorite: isSaved,
-                                  onFavoriteTap: () => _onFavoriteTap(recipe),
-                                  onTap: () {
-                                    Navigator.of(context).push(
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            RecipeDetailScreen(
-                                              recipe: recipe,
-                                              recipeId: recipe.id,
-                                            ),
-                                      ),
-                                    );
-                                  },
+                  ),
+                  Expanded(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      itemCount: state.lastRecipes.length,
+                      itemBuilder: (context, i) {
+                        final recipe = state.lastRecipes[i];
+                        final isSaved = _isRecipeSaved(recipe);
+                        return SizedBox(
+                          width: 150,
+                          child: RecipeCardForBot(
+                            recipe: recipe,
+                            imageUrl: recipe.imageUrl,
+                            isFavorite: isSaved,
+                            onFavoriteTap: () => _onFavoriteTap(recipe),
+                            onTap: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => RecipeDetailScreen(
+                                    recipe: recipe,
+                                    recipeId: recipe.id,
+                                  ),
                                 ),
                               );
                             },
                           ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  );
-                }
-              },
+                  ),
+                ],
+              ),
             ),
-          ),
           if (state.isLoading) const LinearProgressIndicator(),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    maxLines: null, // Allow multiple lines
+                    minLines: 1, // Start with one line
+                    textInputAction: TextInputAction.newline, // Allow new lines
+                    keyboardType:
+                        TextInputType.multiline, // Enable multiline input
                     decoration: InputDecoration(
-                      hintText:
-                          'Type ingredients (comma separated) or ask a question...',
+                      hintText: 'Type something...',
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: AppColors.border),
@@ -413,8 +409,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide(color: AppColors.primary),
                       ),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
                     ),
-                    onSubmitted: _handleSend,
                   ),
                 ),
                 IconButton(

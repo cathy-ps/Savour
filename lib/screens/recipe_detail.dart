@@ -292,7 +292,10 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
     final savedIds = ref.watch(savedRecipeIdsProvider);
     final recipeKey = _recipe != null ? _recipe!.id : '';
     // Always use provider for UI state, model field is for Firestore only
-    final isFavorite = _recipe != null && savedIds.contains(recipeKey);
+    // If this screen is opened with a Recipe object (from recent saved), always show as favorite
+    final isFavorite =
+        _recipe != null &&
+        (_recipe!.isFavorite || savedIds.contains(recipeKey));
     return Scaffold(
       appBar: CustomAppBar(
         title: '',

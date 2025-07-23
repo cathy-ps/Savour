@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:savourai/constant/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:lottie/lottie.dart';
 import 'settings.dart';
 
 import 'package:savourai/models/recipe_model.dart';
@@ -18,6 +17,8 @@ import 'package:savourai/screens/recipe_detail.dart';
 import '../providers/shoppinglist_firestore_provider.dart';
 import '../widgets/reminder_card.dart';
 import '../services/gemini_service.dart';
+import '../services/pexels_service.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'chatbot_screen.dart';
@@ -124,13 +125,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       final dietaryPreferences = List<String>.from(
         userData['dietaryPreferences'] ?? [],
       );
+      debugPrint(
+        'User dietary preferences: '
+        '${dietaryPreferences.join(", ")}',
+      );
 
       // Use Gemini to get personalized suggestions
       final geminiService = GeminiService();
+      // Set up Pexels and Google Image API keys from .env
+      final googleImageApiKey = dotenv.env['custom_api_key'] ?? '';
+      geminiService.setPexelsService(PexelsService());
+      if (googleImageApiKey.isNotEmpty) {
+        geminiService.setGoogleImageApiKey(googleImageApiKey);
+      }
+
       final suggestions = await geminiService.getDietaryPreferenceRecipes(
         dietaryPreferences,
       );
-
+      debugPrint(
+        'Fetched ${suggestions.length} suggestions from GeminiService.',
+      );
+      for (var i = 0; i < suggestions.length; i++) {
+        debugPrint(
+          'Suggestion #${i + 1}: '
+          'title="${suggestions[i].title}", '
+          'imageUrl="${suggestions[i].imageUrl}"',
+        );
+      }
       setState(() {
         _suggestedRecipes = suggestions;
         _loadingSuggestions = false;
@@ -179,8 +200,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       // Take most recent recipes
       final recentRecipes = allSavedRecipes.take(10).toList();
 
+      // Ensure all recent saved recipes have isFavorite set to true
+      final recentRecipesWithFavorite = recentRecipes
+          .map(
+            (recipe) => recipe.isFavorite
+                ? recipe
+                : Recipe(
+                    id: recipe.id,
+                    title: recipe.title,
+                    category: recipe.category,
+                    cuisine: recipe.cuisine,
+                    difficulty: recipe.difficulty,
+                    cookingDuration: recipe.cookingDuration,
+                    description: recipe.description,
+                    servings: recipe.servings,
+                    ingredients: recipe.ingredients,
+                    instructions: recipe.instructions,
+                    nutrition: recipe.nutrition,
+                    imageUrl: recipe.imageUrl,
+                    isFavorite: true,
+                    videoUrl: recipe.videoUrl,
+                    createdAt: recipe.createdAt,
+                  ),
+          )
+          .toList();
+
       setState(() {
-        _recentSavedRecipes = recentRecipes;
+        _recentSavedRecipes = recentRecipesWithFavorite;
       });
     } catch (e) {
       debugPrint('Error fetching recent saved recipes: $e');
@@ -520,11 +566,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                       data: (shoppingLists) {
                         // Debug the shopping lists
                         print('Shopping lists count: ${shoppingLists.length}');
-                        shoppingLists.forEach((list) {
+                        for (var list in shoppingLists) {
                           print(
                             'List ${list.id}: ${list.name}, Reminder: ${list.reminder}',
                           );
-                        });
+                        }
 
                         final listsWithReminders = shoppingLists
                             .where((list) => list.reminder != null)
@@ -555,6 +601,8 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                               //   ),
                               // ),
                             ),
+
+                            // Horizontal list of reminders
                             SizedBox(
                               height: 140,
                               child: ListView.builder(
@@ -580,7 +628,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                     _loadingSuggestions
                         ? const Center(
                             child: Padding(
-                              padding: EdgeInsets.all(24.0),
+                              padding: EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                                vertical: 24,
+                              ),
                               child: CircularProgressIndicator(),
                             ),
                           )
@@ -600,8 +651,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                             emptyMessage:
                                 'No suggestions available. Please set your dietary preferences in settings.',
                           ),
-
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 4),
 
                     // Recently saved recipes section
                     _buildHorizontalRecipeList(
@@ -675,17 +725,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         ),
       ),
 
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (context) => const ChatbotScreen()),
-          );
-        },
-        backgroundColor: AppColors.transparent,
-        child: Lottie.asset(
-          'assets/images/chatbot.json',
-          width: 40,
-          height: 40,
+      floatingActionButton: Tooltip(
+        message: 'Open Chatbot',
+        child: FloatingActionButton(
+          mini: false,
+          onPressed: () {
+            Navigator.of(context).push(
+              MaterialPageRoute(builder: (context) => const ChatbotScreen()),
+            );
+          },
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          highlightElevation: 0,
+          focusElevation: 0,
+          hoverElevation: 0,
+          splashColor: Colors.transparent,
+          hoverColor: Colors.transparent,
+          focusColor: Colors.transparent,
+          child: Image.asset(
+            'assets/animations/chatbot.gif',
+            width: 80,
+            height: 100,
+          ),
         ),
       ),
     );

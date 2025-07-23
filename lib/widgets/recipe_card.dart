@@ -28,20 +28,28 @@ class RecipeCard extends StatelessWidget {
           children: [
             Stack(
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    width: 150,
-                    height: 120,
-                    child: imageUrl.isNotEmpty
-                        ? Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) =>
-                                Container(color: Colors.grey[300]),
-                          )
-                        : Container(color: Colors.grey[300]),
-                  ),
+                Builder(
+                  builder: (context) {
+                    debugPrint(
+                      '[RecipeCard] imageUrl: '
+                      '${imageUrl.isNotEmpty ? imageUrl : 'EMPTY'}',
+                    );
+                    return ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: SizedBox(
+                        width: 150,
+                        height: 120,
+                        child: imageUrl.isNotEmpty
+                            ? Image.network(
+                                imageUrl,
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(color: Colors.grey[300]),
+                              )
+                            : Container(color: Colors.grey[300]),
+                      ),
+                    );
+                  },
                 ),
                 // Cooking duration pill (top left)
                 Positioned(

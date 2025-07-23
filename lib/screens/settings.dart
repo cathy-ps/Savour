@@ -664,6 +664,17 @@ class AboutBottomSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+          Center(
+            child: Text(
+              'Photos provided by Pexels',
+              style: TextStyle(
+                color: Colors.grey[500],
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
         ],
       ),
     );

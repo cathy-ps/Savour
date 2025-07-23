@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 import '../constant/colors.dart';
-import '../providers/shoppinglist_firestore_provider.dart';
-import '../models/shopping_list_model.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:savourai/models/cookbook_model.dart';

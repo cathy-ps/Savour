@@ -26,7 +26,6 @@ class AuthResult {
       AuthResult._(error: error, isSuccess: false);
 }
 
-// Enhanced Auth Notifier with business logic
 class AuthNotifier extends Notifier<AsyncValue<User?>> {
   // Re-authenticate user with current password
   Future<AuthResult> reauthenticateWithPassword({
@@ -150,7 +149,8 @@ class AuthNotifier extends Notifier<AsyncValue<User?>> {
   Future<AuthResult> sendPasswordResetEmail(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email.trim());
-      return AuthResult.success(_auth.currentUser!);
+      // No need for a user object on success
+      return AuthResult._(isSuccess: true);
     } on FirebaseAuthException catch (e) {
       return AuthResult.error(_getErrorMessage(e));
     } catch (e) {

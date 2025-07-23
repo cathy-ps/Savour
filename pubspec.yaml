@@ -50,8 +50,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   google_nav_bar: ^5.0.7
   shadcn_ui: ^0.28.0
-  google_fonts: ^6.2.1
-  lottie: ^3.1.0
+  
 
 
   google_generative_ai: ^0.4.7
@@ -64,6 +63,7 @@ dependencies:
   shimmer: ^3.0.0
   url_launcher: ^6.3.2
   flutter_chat_ui: ^2.8.1
+  flutter_animate: ^4.5.2
   
   
   
@@ -78,6 +78,11 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
+
+flutter_icons:
+  android: true
+  image_path: "assets/app_icon.png"
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
@@ -92,10 +97,13 @@ flutter:
 
   assets:
     - assets/.env
-    - assets/images/chatbot.json
-    - assets/images/bg.jpg    
-    - assets/images/list_bg.jpg
-
+    - assets/animations/chatbot.gif
+    - assets/images/bg.jpg
+    - assets/images/cookbook.png
+    - assets/images/recommended_recipe.png
+    - assets/images/lists.png
+    - assets/images/savour.png
+   
    
   fonts:
     - family: Poppins

@@ -4,6 +4,8 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../models/recipe_model.dart';
 import 'youtube_search_service.dart';
+// import 'google_image_search_service.dart';
+import 'pexels_service.dart';
 import 'google_image_search_service.dart';
 
 // Helper to fetch a food image from Pexels API
@@ -22,6 +24,18 @@ Future<String?> fetchPexelsImage(String query, String apiKey) async {
 }
 
 class GeminiService {
+  GoogleImageSearchService? _googleImageSearchService;
+
+  void setGoogleImageApiKey(String apiKey) {
+    _googleImageSearchService = GoogleImageSearchService(apiKey: apiKey);
+  }
+
+  PexelsService? _pexelsService;
+
+  void setPexelsService(PexelsService service) {
+    _pexelsService = service;
+  }
+
   /// Advanced chatbot method: answers questions, suggests substitutions, and gives cooking tips.
   /// If the question is about substitutions, tips, or general cooking, Gemini will answer accordingly.
   /// If the question is about a specific ingredient, it will suggest substitutions.
@@ -91,6 +105,8 @@ Return the recipes as a JSON array. Each recipe must be a JSON object with these
 - ingredients (array of objects: { name, quantity, unit })
 - instructions (array of strings, step-by-step)
 - nutrition (object: { calories, protein, carbs, fat } per serving, all numbers)
+- videoUrl (string, please search the recipe title on YouTube and provide a YouTube link, ensure it is a valid YouTube URL)
+- imageUrl (string, optional, can be null if no image available)
 
 Make sure recipes are appropriate for the dietary preferences specified. Format the output as a valid JSON array only, no extra text.
 ''';
@@ -117,10 +133,28 @@ Make sure recipes are appropriate for the dietary preferences specified. Format 
         for (final e in data) {
           String title = e['title'] as String? ?? '';
 
-          // Get image from Google Image Search
-          String? imageUrl = _googleImageService != null
-              ? await _googleImageService!.searchImage(title)
-              : null;
+          // Get image from Pexels, fallback to Google Image Search if needed
+          String? imageUrl;
+          if (_pexelsService != null) {
+            try {
+              final images = await _pexelsService!.searchImages(
+                title,
+                perPage: 1,
+              );
+              imageUrl = images.isNotEmpty ? images.first : null;
+            } catch (pexelsErr) {
+              print('[GeminiService] Pexels error: $pexelsErr');
+            }
+          }
+          // Fallback to Google Image Search if Pexels fails or returns no image
+          if ((imageUrl == null || imageUrl.isEmpty) &&
+              _googleImageSearchService != null) {
+            try {
+              imageUrl = await _googleImageSearchService!.searchImage(title);
+            } catch (googleErr) {
+              print('[GeminiService] Google Image Search error: $googleErr');
+            }
+          }
           e['imageUrl'] = imageUrl ?? '';
 
           // Get video from YouTube
@@ -141,12 +175,6 @@ Make sure recipes are appropriate for the dietary preferences specified. Format 
       print('[GeminiService] Stacktrace: $st');
       return [];
     }
-  }
-
-  GoogleImageSearchService? _googleImageService;
-
-  void setGoogleImageSearchService(GoogleImageSearchService service) {
-    _googleImageService = service;
   }
 
   YoutubeSearchService? _youtubeService;
@@ -212,11 +240,8 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
 ''';
     try {
       if (youtubeApiKey != null) setYoutubeApiKey(youtubeApiKey);
-      if (googleImageApiKey != null) {
-        setGoogleImageSearchService(
-          GoogleImageSearchService(apiKey: googleImageApiKey),
-        );
-      }
+      // Always set PexelsService (no API key needed here, it uses dotenv)
+      setPexelsService(PexelsService());
       final content = Content.text(prompt);
       final response = await _model.generateContent([content]);
       final text = response.text;
@@ -235,10 +260,15 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
         List<Recipe> recipes = [];
         for (final e in data) {
           String title = e['title'] as String? ?? '';
-          // Get image from Google Image Search
-          String? imageUrl = _googleImageService != null
-              ? await _googleImageService!.searchImage(title)
-              : null;
+          // Get image from Pexels
+          String? imageUrl;
+          if (_pexelsService != null) {
+            final images = await _pexelsService!.searchImages(
+              title,
+              perPage: 1,
+            );
+            imageUrl = images.isNotEmpty ? images.first : null;
+          }
           e['imageUrl'] = imageUrl ?? '';
           // Get video from YouTube
           String? videoUrl = _youtubeService != null

@@ -68,7 +68,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           padding: const EdgeInsets.all(24.0),
 
           child: Padding(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.all(24.0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -82,11 +82,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       ).primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      Icons.restaurant_menu,
-                      size: 32,
-                      color: Theme.of(context).primaryColor,
-                    ),
+                    child: Image.asset('assets/images/savour.png', height: 180),
                   ),
                   const SizedBox(height: 24),
                   Text(

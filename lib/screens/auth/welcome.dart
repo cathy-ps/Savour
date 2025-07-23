@@ -13,49 +13,47 @@ class WelcomePage extends StatelessWidget {
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Image.network(
-            MediaQuery.of(context).platformBrightness == Brightness.light
-                ? "https://i.postimg.cc/nz0YBQcH/Logo-light.png"
-                : "https://i.postimg.cc/MHH0DKv1/Logo-dark.png",
-            height: 120,
-          ),
-          const SizedBox(height: 24),
+          // Logo
+          Image.asset('assets/images/savour.png', height: 300),
+          //const SizedBox(height: 24),
           const Text(
-            "Welcome to SavourAI!",
+            "Welcome to Savour!",
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           const Text(
-            "Discover, save, and cook delicious recipes with ease.",
+            "Savour your meals. Skip the waste.\n\nInstant recipes, organized recipes, smart shopping lists, and your own AI kitchen assistant!",
             style: TextStyle(fontSize: 16, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
         ],
       ),
+
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.shopping_cart, size: 80, color: Color(0xFF00BF6D)),
-          const SizedBox(height: 24),
+          Image.asset('assets/images/recommended_recipe.png', height: 280),
+          // const Icon(Icons.shopping_cart, size: 80, color: Color(0xFF00BF6D)),
+          // const SizedBox(height: 24),
           const Text(
-            "Smart Shopping Lists",
+            "Instant Recipe Recommendations",
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 12),
           const Text(
-            "Easily add recipe ingredients to your shopping list.",
+            "Just enter the ingredients you have and Savour will whip up recipes that match what’s in your kitchen. No more guessing, no more waste.",
             style: TextStyle(fontSize: 16, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
         ],
       ),
+
       Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.book, size: 80, color: Color(0xFFFE9901)),
-          const SizedBox(height: 24),
+          Image.asset('assets/images/cookbook.png', height: 280),
           const Text(
             "Your Personal Cookbook",
             style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
@@ -63,7 +61,24 @@ class WelcomePage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           const Text(
-            "Organize your favorite recipes in one place.",
+            "Save, organize, and revisit your favorite recipes anytime. Create collections, never lose a recipe you love, and find inspiration with ease.",
+            style: TextStyle(fontSize: 16, color: Colors.black54),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset('assets/images/lists.png', height: 280),
+          const Text(
+            "Smart Shopping Made Easy",
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            "Add recipe ingredients directly to your shopping list with a tap. Shop smarter, avoid duplicates, and keep your kitchen stocked for your next meal.",
             style: TextStyle(fontSize: 16, color: Colors.black54),
             textAlign: TextAlign.center,
           ),
@@ -80,9 +95,9 @@ class WelcomePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16.0),
               child: Column(
                 children: [
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 28),
                   SizedBox(
-                    height: 620,
+                    height: 560,
                     child: PageView.builder(
                       controller: pageController,
                       itemCount: pages.length,

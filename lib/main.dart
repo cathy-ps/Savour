@@ -13,14 +13,12 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:permission_handler/permission_handler.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+/// Call during app initialization to ensure notifications are ready to use.
 Future<void> initNotifications() async {
-  print('[DEBUG] Initializing notifications...');
-
   // Create the notification channel for Android
   final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
       flutterLocalNotificationsPlugin
@@ -28,10 +26,11 @@ Future<void> initNotifications() async {
             AndroidFlutterLocalNotificationsPlugin
           >();
 
-  final bool? channelExists = await androidImplementation
-      ?.areNotificationsEnabled();
-  print('[DEBUG] Notifications enabled: $channelExists');
+  // final bool? channelExists = await androidImplementation
+  //     ?.areNotificationsEnabled();
+  // print('[DEBUG] Notifications enabled: $channelExists');
 
+  // Create a notification channel for reminders
   const AndroidNotificationChannel channel = AndroidNotificationChannel(
     'reminder_channel_id',
     'Reminders',
@@ -97,17 +96,20 @@ class MyApp extends StatelessWidget {
         final authState = ref.watch(authStateProvider);
         return ShadApp(
           title: 'SavourAI',
-          darkTheme: ShadThemeData(
-            brightness: Brightness.dark,
+          theme: ShadThemeData(
+            brightness: Brightness.light,
             colorScheme: const ShadZincColorScheme.light(
               primary: AppColors.primary,
-              background: Colors.white10, // Optionally override background
+              background: Colors.white, // Optionally override background
             ),
-            textTheme: ShadTextTheme.fromGoogleFont(GoogleFonts.poppins),
+
+            // Use Google Fonts for text styles - Poppins
+            textTheme: ShadTextTheme(family: 'Poppins'),
             primaryButtonTheme: const ShadButtonTheme(
               backgroundColor: AppColors.primary,
             ),
           ),
+
           debugShowCheckedModeBanner: false,
           home: authState.when(
             data: (user) => user == null ? WelcomePage() : RootNavigation(),

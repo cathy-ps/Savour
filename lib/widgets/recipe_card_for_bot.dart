@@ -25,6 +25,10 @@ class RecipeCardForBot extends StatelessWidget {
         : (recipe.imageUrl.isNotEmpty)
         ? recipe.imageUrl
         : null;
+    debugPrint(
+      '[RecipeCardForBot] imageUrl: '
+      '${imgUrl != null && imgUrl.isNotEmpty ? imgUrl : 'EMPTY'}',
+    );
 
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -71,7 +75,7 @@ class RecipeCardForBot extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha:0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -105,7 +109,7 @@ class RecipeCardForBot extends StatelessWidget {
                                 size: 18,
                                 shadows: [
                                   Shadow(
-                                    color: Colors.black.withValues(alpha:0.3),
+                                    color: Colors.black.withValues(alpha: 0.3),
                                     blurRadius: 2,
                                     offset: const Offset(0, 1),
                                   ),

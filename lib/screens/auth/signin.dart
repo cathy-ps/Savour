@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:savourai/constant/colors.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import 'signup.dart';
 import 'package:savourai/providers/auth_providers.dart';
@@ -90,7 +91,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
           padding: const EdgeInsets.all(24.0),
 
           child: Padding(
-            padding: const EdgeInsets.all(32.0),
+            padding: const EdgeInsets.all(24.0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -99,13 +100,14 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).primaryColor.withValues(alpha:0.1),
+                      color: Theme.of(
+                        context,
+                      ).primaryColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: Icon(
-                      Icons.restaurant_menu,
-                      size: 32,
-                      color: Theme.of(context).primaryColor,
+                    child: Image.asset(
+                      'assets/images/app_icon.png',
+                      height: 180,
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -127,7 +129,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                       margin: const EdgeInsets.only(bottom: 16),
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha:0.1),
+                        color: Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -211,7 +213,10 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           });
                         }
                       },
-                      child: const Text('Forgot password?'),
+                      child: const Text(
+                        'Forgot password?',
+                        style: TextStyle(color: AppColors.black),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),

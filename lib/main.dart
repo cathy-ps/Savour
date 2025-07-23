@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:savourai/constant/colors.dart';
 import 'firebase_options.dart';
 import 'screens/auth/welcome.dart';
+
 import 'root.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -68,6 +69,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Load environment variables
   await dotenv.load(fileName: 'assets/.env');
 
   // Initialize timezone

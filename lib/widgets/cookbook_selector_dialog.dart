@@ -35,7 +35,7 @@ class _CookbookSelectorDialogState extends State<CookbookSelectorDialog> {
                 shrinkWrap: true,
                 itemCount: widget.cookbooks.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
+                  crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
                   childAspectRatio: 1.1,

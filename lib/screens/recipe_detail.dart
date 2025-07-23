@@ -413,7 +413,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Title and cooking time
+                            // Title and metadata (two by two)
                             Text(
                               _recipe!.title,
                               style: const TextStyle(
@@ -429,70 +429,103 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(
-                                    Icons.timer,
-                                    size: 18,
-                                    color: AppColors.muted,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    '${_recipe!.cookingDuration} min',
-                                    style: const TextStyle(
-                                      color: AppColors.muted,
+                                  Expanded(
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.timer,
+                                          size: 18,
+                                          color: AppColors.muted,
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Flexible(
+                                          child: Text(
+                                            '${_recipe!.cookingDuration} min',
+                                            style: const TextStyle(
+                                              color: AppColors.muted,
+                                            ),
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                  if (_recipe!.difficulty.isNotEmpty) ...[
-                                    const SizedBox(width: 16),
-                                    const Icon(
-                                      Icons.restaurant_menu,
-                                      size: 18,
-                                      color: AppColors.muted,
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      _recipe!.difficulty,
-                                      style: const TextStyle(
-                                        color: AppColors.muted,
+                                  if (_recipe!.difficulty.isNotEmpty)
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.restaurant_menu,
+                                            size: 18,
+                                            color: AppColors.muted,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Flexible(
+                                            child: Text(
+                                              _recipe!.difficulty,
+                                              style: const TextStyle(
+                                                color: AppColors.muted,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
-                                  // Category
-                                  if (_recipe!.category.isNotEmpty) ...[
-                                    const SizedBox(width: 16),
-                                    const Icon(
-                                      Icons.category,
-                                      size: 18,
-                                      color: AppColors.muted,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _recipe!.category,
-                                      style: const TextStyle(
-                                        color: AppColors.muted,
-                                      ),
-                                    ),
-                                  ],
-                                  // Cuisine
-                                  if (_recipe!.cuisine.isNotEmpty) ...[
-                                    const SizedBox(width: 16),
-                                    const Icon(
-                                      Icons.public,
-                                      size: 18,
-                                      color: AppColors.muted,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      _recipe!.cuisine,
-                                      style: const TextStyle(
-                                        color: AppColors.muted,
-                                      ),
-                                    ),
-                                  ],
                                 ],
                               ),
                             ),
-
-                            // --- (Removed metadata row; serving size will be with Nutrition header) ---
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: Row(
+                                children: [
+                                  if (_recipe!.category.isNotEmpty)
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.category,
+                                            size: 18,
+                                            color: AppColors.muted,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Flexible(
+                                            child: Text(
+                                              _recipe!.category,
+                                              style: const TextStyle(
+                                                color: AppColors.muted,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  if (_recipe!.cuisine.isNotEmpty)
+                                    Expanded(
+                                      child: Row(
+                                        children: [
+                                          const Icon(
+                                            Icons.public,
+                                            size: 18,
+                                            color: AppColors.muted,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Flexible(
+                                            child: Text(
+                                              _recipe!.cuisine,
+                                              style: const TextStyle(
+                                                color: AppColors.muted,
+                                              ),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
 
                             // Description section
                             if (_recipe!.description.isNotEmpty) ...[
@@ -531,52 +564,55 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                                       color: AppColors.text,
                                     ),
                                   ),
-                                  Row(
-                                    children: [
-                                      const Text(
-                                        'Serving Size:',
-                                        style: TextStyle(
-                                          color: AppColors.muted,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(
-                                          CupertinoIcons.minus,
-                                          size: 18,
-                                        ),
-                                        onPressed: _servingCount > 1
-                                            ? () => setState(
-                                                () => _servingCount--,
-                                              )
-                                            : null,
-                                      ),
-                                      Text(
-                                        '$_servingCount',
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 5),
-                                      IconButton(
-                                        icon: const Icon(
-                                          CupertinoIcons.add,
-                                          size: 18,
-                                        ),
-                                        onPressed: () =>
-                                            setState(() => _servingCount++),
-                                      ),
-                                      const Icon(
-                                        CupertinoIcons.person_2,
-                                        size: 18,
-                                        color: AppColors.muted,
-                                      ),
-                                      const SizedBox(width: 4),
-                                    ],
-                                  ),
                                 ],
                               ),
                               const SizedBox(height: 12),
+
+                              // Serving size controls
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  const Text(
+                                    'Serving Size:',
+                                    style: TextStyle(
+                                      color: AppColors.muted,
+                                      fontWeight: FontWeight.w500,
+                                    ),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      CupertinoIcons.minus,
+                                      size: 18,
+                                    ),
+                                    onPressed: _servingCount > 1
+                                        ? () => setState(() => _servingCount--)
+                                        : null,
+                                  ),
+                                  Text(
+                                    '$_servingCount',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Icon(
+                                    CupertinoIcons.person_2,
+                                    size: 18,
+                                    color: AppColors.muted,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 5),
+                                  IconButton(
+                                    icon: const Icon(
+                                      CupertinoIcons.add,
+                                      size: 18,
+                                    ),
+                                    onPressed: () =>
+                                        setState(() => _servingCount++),
+                                  ),
+                                ],
+                              ),
+
+                              // Nutrition info container
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
@@ -598,40 +634,24 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                                     ),
                                     _buildNutritionItem(
                                       'Protein',
-                                      (_recipe!.nutrition.protein *
-                                                  (_recipe!.servings > 0
-                                                      ? _servingCount /
-                                                            _recipe!.servings
-                                                      : 1))
-                                              .toStringAsFixed(1) +
-                                          'g',
+                                      '${(_recipe!.nutrition.protein * (_recipe!.servings > 0 ? _servingCount / _recipe!.servings : 1)).toStringAsFixed(1)}g',
                                     ),
                                     _buildNutritionItem(
                                       'Carbs',
-                                      (_recipe!.nutrition.carbs *
-                                                  (_recipe!.servings > 0
-                                                      ? _servingCount /
-                                                            _recipe!.servings
-                                                      : 1))
-                                              .toStringAsFixed(1) +
-                                          'g',
+                                      '${(_recipe!.nutrition.carbs * (_recipe!.servings > 0 ? _servingCount / _recipe!.servings : 1)).toStringAsFixed(1)}g',
                                     ),
                                     _buildNutritionItem(
                                       'Fat',
-                                      (_recipe!.nutrition.fat *
-                                                  (_recipe!.servings > 0
-                                                      ? _servingCount /
-                                                            _recipe!.servings
-                                                      : 1))
-                                              .toStringAsFixed(1) +
-                                          'g',
+                                      '${(_recipe!.nutrition.fat * (_recipe!.servings > 0 ? _servingCount / _recipe!.servings : 1)).toStringAsFixed(1)}g',
                                     ),
                                   ],
                                 ),
                               ),
+                              const SizedBox(height: 12),
                             ],
-
                             const SizedBox(height: 24),
+
+                            // Ingredients and instructions tabs
                             ShadTabs<String>(
                               value: 'ingredients',
                               onChanged: (value) {

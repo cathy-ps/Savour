@@ -28,6 +28,7 @@ final shoppingListsProvider = StreamProvider<List<ShoppingList>>((ref) {
         .map(
           (doc) => ShoppingList.fromJson({...doc.data(), 'id': doc.id}, doc.id),
         )
+        .where((list) => !list.archived)
         .toList(),
   );
 });

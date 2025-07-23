@@ -5,6 +5,7 @@ import 'package:savourai/screens/auth/welcome.dart';
 import 'package:savourai/utils/form_validators.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import '../providers/user_profile_provider.dart';
+import '../providers/archived_shoppinglist_provider.dart';
 import 'package:savourai/constant/colors.dart';
 import 'package:savourai/constant/dietary_preferences.dart';
 import 'package:savourai/widgets/sign_out_card.dart';
@@ -130,7 +131,22 @@ class SettingsScreen extends ConsumerWidget {
 
               // More Section
               const _SectionHeader(title: 'Others'),
-
+              // Archived Shopping Lists
+              _SettingsTile(
+                title: 'Archived Shopping Lists',
+                onTap: () async {
+                  showModalBottomSheet(
+                    context: context,
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                    ),
+                    isScrollControlled: true,
+                    builder: (context) => const ArchivedShoppingListsSheet(),
+                  );
+                },
+              ),
               _SettingsTile(
                 title: 'About Savour',
                 onTap: () async {
@@ -675,6 +691,62 @@ class AboutBottomSheet extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+// Archived Shopping Lists Modal Sheet
+class ArchivedShoppingListsSheet extends ConsumerWidget {
+  const ArchivedShoppingListsSheet({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final archivedListsAsync = ref.watch(archivedShoppingListsProvider);
+    return Padding(
+      padding: MediaQuery.of(context).viewInsets.add(const EdgeInsets.all(24)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Center(
+            child: Text(
+              'Archived Shopping Lists',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            ),
+          ),
+          const SizedBox(height: 16),
+          archivedListsAsync.when(
+            data: (lists) => lists.isEmpty
+                ? const Center(child: Text('No archived lists.'))
+                : SizedBox(
+                    height: 300,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: lists.length,
+                      itemBuilder: (context, idx) {
+                        final list = lists[idx];
+                        final ingredientNames = list.ingredients
+                            .map((i) => i.name)
+                            .join(', ');
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          child: ListTile(
+                            title: Text(list.name),
+                            subtitle: Text(
+                              ingredientNames.isNotEmpty
+                                  ? 'Ingredients: $ingredientNames'
+                                  : 'No ingredients',
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (e, st) => Center(child: Text('Error: $e')),
+          ),
         ],
       ),
     );

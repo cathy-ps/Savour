@@ -36,6 +36,7 @@ class ShoppingList {
   final List<ShoppingListIngredient> ingredients;
   final DateTime? reminder;
   final DateTime createdAt;
+  final bool archived;
 
   ShoppingList({
     required this.id,
@@ -43,6 +44,7 @@ class ShoppingList {
     required this.ingredients,
     this.reminder,
     required this.createdAt,
+    this.archived = false,
   });
 
   int get totalIngredients => ingredients.length;
@@ -69,6 +71,7 @@ class ShoppingList {
                               : null)))
             : null,
         createdAt: DateTime.tryParse(json['createdAt'] ?? '') ?? DateTime.now(),
+        archived: json['archived'] ?? false,
       );
 
   // For use with Firestore DocumentSnapshot
@@ -80,5 +83,6 @@ class ShoppingList {
     'ingredients': ingredients.map((x) => x.toJson()).toList(),
     'reminder': reminder?.toIso8601String(),
     'createdAt': createdAt.toIso8601String(),
+    'archived': archived,
   };
 }

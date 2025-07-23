@@ -34,6 +34,29 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
     _checked = List.filled(widget.list.ingredients.length, false);
   }
 
+  bool _wasAllChecked = false;
+
+  Future<void> _archiveIfAllChecked() async {
+    final allChecked = _checked.isNotEmpty && _checked.every((c) => c);
+    if (allChecked && !_wasAllChecked) {
+      _wasAllChecked = true;
+      final user = FirebaseAuth.instance.currentUser;
+      if (user != null) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .collection('shoppingLists')
+            .doc(widget.list.id)
+            .set({'archived': true}, SetOptions(merge: true));
+      }
+      if (mounted) {
+        widget.onDelete(); // Optionally remove from UI immediately
+      }
+    } else if (!allChecked) {
+      _wasAllChecked = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final list = widget.list;
@@ -304,11 +327,12 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                                     ),
                                     minLeadingWidth: 0,
                                     leading: InkWell(
-                                      onTap: () {
+                                      onTap: () async {
                                         setState(
                                           () => _checked[origIdx] =
                                               !_checked[origIdx],
                                         );
+                                        await _archiveIfAllChecked();
                                       },
                                       borderRadius: BorderRadius.circular(12),
                                       child: Container(
@@ -355,11 +379,12 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                                               fontSize: 13,
                                             ),
                                     ),
-                                    onTap: () {
+                                    onTap: () async {
                                       setState(
                                         () => _checked[origIdx] =
                                             !_checked[origIdx],
                                       );
+                                      await _archiveIfAllChecked();
                                     },
                                   );
                                 },

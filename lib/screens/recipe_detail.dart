@@ -39,6 +39,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
   bool _loading = true;
   String? _error;
   late TabController _tabController;
+  int _servingCount = 1;
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
     _tabController = TabController(length: 2, vsync: this);
     if (widget.recipe != null) {
       _recipe = widget.recipe;
+      _servingCount = _recipe?.servings ?? 1;
       _loading = false;
     } else {
       _fetchRecipe();
@@ -218,11 +220,22 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
 
   // Builds the ingredients content for ShadTabs
   Widget _buildIngredientsContent() {
+    // Try to parse quantity as num, fallback to string if not possible
+    double ratio = (_recipe?.servings ?? 1) > 0
+        ? _servingCount / (_recipe?.servings ?? 1)
+        : 1.0;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: _recipe!.ingredients.map((ing) {
+          String displayQty = ing.quantity;
+          num? qtyNum = num.tryParse(ing.quantity);
+          if (qtyNum != null) {
+            displayQty = (qtyNum * ratio).toStringAsFixed(
+              qtyNum is int ? 0 : 2,
+            );
+          }
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 4),
             child: Row(
@@ -231,7 +244,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '${ing.quantity} ${ing.unit} ${ing.name}',
+                    '$displayQty ${ing.unit} ${ing.name}',
                     style: const TextStyle(fontSize: 14),
                   ),
                 ),
@@ -291,8 +304,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
   Widget build(BuildContext context) {
     final savedIds = ref.watch(savedRecipeIdsProvider);
     final recipeKey = _recipe != null ? _recipe!.id : '';
-    // Always use provider for UI state, model field is for Firestore only
-    // If this screen is opened with a Recipe object (from recent saved), always show as favorite
     final isFavorite =
         _recipe != null &&
         (_recipe!.isFavorite || savedIds.contains(recipeKey));
@@ -314,7 +325,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                       savedRecipeIdsProvider.notifier,
                     );
                     if (isFavorite) {
-                      // Remove from Firestore if needed
                       if (widget.userId != null && widget.cookbookId != null) {
                         await FirebaseFirestore.instance
                             .collection('users')
@@ -330,9 +340,8 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                         newSet.remove(id);
                         return newSet;
                       });
-                      setState(() {}); // Force UI update
+                      setState(() {});
                     } else {
-                      // Prompt user to select cookbook and save
                       if (_recipe != null) {
                         final updatedRecipe = Recipe(
                           id: _recipe!.id,
@@ -351,7 +360,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                           videoUrl: _recipe!.videoUrl,
                         );
                         await _saveToCookbook(updatedRecipe);
-                        setState(() {}); // Force UI update
+                        setState(() {});
                       }
                     }
                   },
@@ -377,15 +386,11 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
             )
           : Stack(
               children: [
-                // Main content with scroll
                 SingleChildScrollView(
-                  padding: const EdgeInsets.only(
-                    bottom: 80,
-                  ), // Space for bottom buttons
+                  padding: const EdgeInsets.only(bottom: 80),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Image
                       if (_recipe!.imageUrl.isNotEmpty)
                         ClipRRect(
                           borderRadius: const BorderRadius.only(
@@ -451,9 +456,43 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                                       ),
                                     ),
                                   ],
+                                  // Category
+                                  if (_recipe!.category.isNotEmpty) ...[
+                                    const SizedBox(width: 16),
+                                    const Icon(
+                                      Icons.category,
+                                      size: 18,
+                                      color: AppColors.muted,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _recipe!.category,
+                                      style: const TextStyle(
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                  ],
+                                  // Cuisine
+                                  if (_recipe!.cuisine.isNotEmpty) ...[
+                                    const SizedBox(width: 16),
+                                    const Icon(
+                                      Icons.public,
+                                      size: 18,
+                                      color: AppColors.muted,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      _recipe!.cuisine,
+                                      style: const TextStyle(
+                                        color: AppColors.muted,
+                                      ),
+                                    ),
+                                  ],
                                 ],
                               ),
                             ),
+
+                            // --- (Removed metadata row; serving size will be with Nutrition header) ---
 
                             // Description section
                             if (_recipe!.description.isNotEmpty) ...[
@@ -480,13 +519,62 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                             // Nutrition section
                             if (_recipe!.nutrition.calories > 0) ...[
                               const SizedBox(height: 24),
-                              const Text(
-                                'Nutrition Information',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: AppColors.text,
-                                ),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  const Text(
+                                    'Nutrition Information',
+                                    style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColors.text,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      const Text(
+                                        'Serving Size:',
+                                        style: TextStyle(
+                                          color: AppColors.muted,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      IconButton(
+                                        icon: const Icon(
+                                          CupertinoIcons.minus,
+                                          size: 18,
+                                        ),
+                                        onPressed: _servingCount > 1
+                                            ? () => setState(
+                                                () => _servingCount--,
+                                              )
+                                            : null,
+                                      ),
+                                      Text(
+                                        '$_servingCount',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 5),
+                                      IconButton(
+                                        icon: const Icon(
+                                          CupertinoIcons.add,
+                                          size: 18,
+                                        ),
+                                        onPressed: () =>
+                                            setState(() => _servingCount++),
+                                      ),
+                                      const Icon(
+                                        CupertinoIcons.person_2,
+                                        size: 18,
+                                        color: AppColors.muted,
+                                      ),
+                                      const SizedBox(width: 4),
+                                    ],
+                                  ),
+                                ],
                               ),
                               const SizedBox(height: 12),
                               Container(
@@ -501,31 +589,52 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                                   children: [
                                     _buildNutritionItem(
                                       'Calories',
-                                      '${_recipe!.nutrition.calories}',
+                                      (_recipe!.nutrition.calories *
+                                              (_recipe!.servings > 0
+                                                  ? _servingCount /
+                                                        _recipe!.servings
+                                                  : 1))
+                                          .toStringAsFixed(0),
                                     ),
                                     _buildNutritionItem(
                                       'Protein',
-                                      '${_recipe!.nutrition.protein}g',
+                                      (_recipe!.nutrition.protein *
+                                                  (_recipe!.servings > 0
+                                                      ? _servingCount /
+                                                            _recipe!.servings
+                                                      : 1))
+                                              .toStringAsFixed(1) +
+                                          'g',
                                     ),
                                     _buildNutritionItem(
                                       'Carbs',
-                                      '${_recipe!.nutrition.carbs}g',
+                                      (_recipe!.nutrition.carbs *
+                                                  (_recipe!.servings > 0
+                                                      ? _servingCount /
+                                                            _recipe!.servings
+                                                      : 1))
+                                              .toStringAsFixed(1) +
+                                          'g',
                                     ),
                                     _buildNutritionItem(
                                       'Fat',
-                                      '${_recipe!.nutrition.fat}g',
+                                      (_recipe!.nutrition.fat *
+                                                  (_recipe!.servings > 0
+                                                      ? _servingCount /
+                                                            _recipe!.servings
+                                                      : 1))
+                                              .toStringAsFixed(1) +
+                                          'g',
                                     ),
                                   ],
                                 ),
                               ),
                             ],
 
-                            // Tabs for Ingredients and Instructions
                             const SizedBox(height: 24),
                             ShadTabs<String>(
                               value: 'ingredients',
                               onChanged: (value) {
-                                // Update the tab controller to match if needed
                                 if (value == 'ingredients') {
                                   _tabController.animateTo(0);
                                 } else if (value == 'instructions') {
@@ -556,7 +665,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                               ],
                             ),
 
-                            // Video Tutorial Section
                             if (_recipe!.videoUrl != null &&
                                 _recipe!.videoUrl!.isNotEmpty) ...[
                               const SizedBox(height: 24),
@@ -571,7 +679,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                               const SizedBox(height: 12),
                               GestureDetector(
                                 onTap: () async {
-                                  // Ensure the URL is a full YouTube link
                                   String videoUrl = _recipe!.videoUrl!;
                                   if (!videoUrl.startsWith('https://')) {
                                     videoUrl = 'https://$videoUrl';
@@ -638,8 +745,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                     ],
                   ),
                 ),
-
-                // Bottom fixed buttons
                 Positioned(
                   left: 0,
                   right: 0,
@@ -661,7 +766,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                     ),
                     child: Row(
                       children: [
-                        // Add to Shopping List button (smaller, rounded)
                         SizedBox(
                           height: 36,
                           child: ElevatedButton.icon(
@@ -686,8 +790,6 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                           ),
                         ),
                         const SizedBox(width: 12),
-
-                        // Start Cooking button (larger, primary color)
                         Expanded(
                           child: SizedBox(
                             height: 46,

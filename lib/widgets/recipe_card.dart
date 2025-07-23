@@ -105,8 +105,8 @@ class RecipeCard extends StatelessWidget {
                 recipe.title,
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w300,
                   shadows: [
                     Shadow(
                       color: Colors.black54,

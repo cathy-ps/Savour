@@ -69,9 +69,10 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Header section
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 8),
                   child: const Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -108,7 +109,7 @@ class _ShoppingListScreenState extends State<ShoppingListScreen> {
                                 final list = shoppingLists[index];
                                 return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 10,
+                                    horizontal: 6,
                                   ),
                                   child: ShoppingListCard(
                                     list: list,

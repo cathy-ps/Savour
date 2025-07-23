@@ -17,7 +17,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
+  //final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
@@ -27,7 +27,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    //_confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -170,23 +170,23 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     textInputAction: TextInputAction.next,
                   ),
                   const SizedBox(height: 16),
-                  ShadInputFormField(
-                    controller: _confirmPasswordController,
-                    id: 'confirm_password',
-                    label: const Text('Confirm Password'),
-                    placeholder: const Text('Re-enter your password'),
-                    validator: (value) => validateConfirmPassword(
-                      value,
-                      _passwordController.text,
-                    ),
-                    obscureText: _obscurePassword,
-                    leading: const Padding(
-                      padding: EdgeInsets.all(4.0),
-                      child: Icon(Icons.lock_outline),
-                    ),
-                    textInputAction: TextInputAction.done,
-                  ),
-                  const SizedBox(height: 24),
+                  //ShadInputFormField(
+                  //   controller: _confirmPasswordController,
+                  //   id: 'confirm_password',
+                  //   label: const Text('Confirm Password'),
+                  //   placeholder: const Text('Re-enter your password'),
+                  //   validator: (value) => validateConfirmPassword(
+                  //     value,
+                  //     _passwordController.text,
+                  //   ),
+                  //   obscureText: _obscurePassword,
+                  //   leading: const Padding(
+                  //     padding: EdgeInsets.all(4.0),
+                  //     child: Icon(Icons.lock_outline),
+                  //   ),
+                  //   textInputAction: TextInputAction.done,
+                  // ),
+                  // const SizedBox(height: 24),
                   ShadButton(
                     onPressed: _isLoading ? null : _signUp,
                     width: double.infinity,

@@ -43,7 +43,7 @@ class CookbookDetailScreen extends ConsumerWidget {
         title: cookbook.title,
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete),
+            icon: const Icon(Icons.delete, color: AppColors.error),
             tooltip: 'Delete Cookbook',
             onPressed: () async {
               final confirm = await showDialog<bool>(
@@ -149,46 +149,46 @@ class CookbookDetailScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: AppColors.white,
-                        textStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: () async {
-                        // Add all ingredients to Firestore shopping list as a new list
-                        final now = DateTime.now();
-                        final shoppingListId =
-                            '${id}_${now.millisecondsSinceEpoch}';
-                        final shoppingListIngredients = recipe.ingredients
-                            .map(
-                              (ing) => ShoppingListIngredient(
-                                id: '${ing.name}-${ing.quantity}-${ing.unit}',
-                                name: ing.name,
-                                quantity: ing.quantity,
-                                unit: ing.unit,
-                              ),
-                            )
-                            .toList();
-                        final shoppingList = ShoppingList(
-                          id: shoppingListId,
-                          name: recipe.title,
-                          ingredients: shoppingListIngredients,
-                          createdAt: now,
-                          reminder: null,
-                        );
-                        await addShoppingList(shoppingList);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Added to shopping list!'),
-                          ),
-                        );
-                      },
-                      child: const Text('Add to Shopping List'),
-                    ),
+                    // ElevatedButton(
+                    //   style: ElevatedButton.styleFrom(
+                    //     backgroundColor: AppColors.primary,
+                    //     foregroundColor: AppColors.white,
+                    //     textStyle: const TextStyle(fontWeight: FontWeight.bold),
+                    //     shape: RoundedRectangleBorder(
+                    //       borderRadius: BorderRadius.circular(12),
+                    //     ),
+                    //   ),
+                    //   onPressed: () async {
+                    //     // Add all ingredients to Firestore shopping list as a new list
+                    //     final now = DateTime.now();
+                    //     final shoppingListId =
+                    //         '${id}_${now.millisecondsSinceEpoch}';
+                    //     final shoppingListIngredients = recipe.ingredients
+                    //         .map(
+                    //           (ing) => ShoppingListIngredient(
+                    //             id: '${ing.name}-${ing.quantity}-${ing.unit}',
+                    //             name: ing.name,
+                    //             quantity: ing.quantity,
+                    //             unit: ing.unit,
+                    //           ),
+                    //         )
+                    //         .toList();
+                    //     final shoppingList = ShoppingList(
+                    //       id: shoppingListId,
+                    //       name: recipe.title,
+                    //       ingredients: shoppingListIngredients,
+                    //       createdAt: now,
+                    //       reminder: null,
+                    //     );
+                    //     await addShoppingList(shoppingList);
+                    //     ScaffoldMessenger.of(context).showSnackBar(
+                    //       const SnackBar(
+                    //         content: Text('Added to shopping list!'),
+                    //       ),
+                    //     );
+                    //   },
+                    //   child: const Text('Add to Shopping List'),
+                    // ),
                   ],
                 );
               },

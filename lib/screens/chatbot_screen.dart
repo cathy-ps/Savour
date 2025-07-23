@@ -10,7 +10,6 @@ import '../models/cookbook_model.dart';
 import 'package:savourai/constant/colors.dart';
 import '../providers/chatbot_provider.dart';
 import '../providers/saved_recipes_provider.dart';
-import '../utils/favorite_handler.dart';
 import '../providers/cookbook_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';

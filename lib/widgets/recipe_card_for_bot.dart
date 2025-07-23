@@ -22,7 +22,7 @@ class RecipeCardForBot extends StatelessWidget {
   Widget build(BuildContext context) {
     final imgUrl = (imageUrl != null && imageUrl!.isNotEmpty)
         ? imageUrl!
-        : (recipe.imageUrl.isNotEmpty && recipe.imageUrl != null)
+        : (recipe.imageUrl.isNotEmpty)
         ? recipe.imageUrl
         : null;
 

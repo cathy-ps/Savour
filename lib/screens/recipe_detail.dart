@@ -404,8 +404,8 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton.icon(
-                          icon: const Icon(Icons.download),
-                          label: const Text('Download'),
+                          icon: const Icon(Icons.menu_book),
+                          label: const Text('Start Cooking'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.white,
                             foregroundColor: AppColors.primary,
@@ -413,18 +413,26 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () {
-                            // TODO: Implement offline download logic
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Recipe downloaded for offline use!',
+                            if (_recipe == null) return;
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(24),
                                 ),
                               ),
+                              builder: (context) {
+                                return _StepByStepInstructionsSheet(
+                                  instructions: _recipe!.instructions,
+                                );
+                              },
                             );
                           },
                         ),
                       ],
                     ),
+
                     // Video Tutorial Section
                     if (_recipe!.videoUrl != null &&
                         _recipe!.videoUrl!.isNotEmpty)
@@ -495,6 +503,76 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen> {
                 ),
               ),
             ),
+    );
+  }
+}
+
+// Step-by-step instructions bottom sheet
+class _StepByStepInstructionsSheet extends StatefulWidget {
+  final List<String> instructions;
+  const _StepByStepInstructionsSheet({required this.instructions});
+
+  @override
+  State<_StepByStepInstructionsSheet> createState() =>
+      _StepByStepInstructionsSheetState();
+}
+
+class _StepByStepInstructionsSheetState
+    extends State<_StepByStepInstructionsSheet> {
+  int _currentStep = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: MediaQuery.of(context).viewInsets.add(const EdgeInsets.all(24)),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Step-by-Step Instructions',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Step ${_currentStep + 1} of ${widget.instructions.length}',
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            widget.instructions[_currentStep],
+            style: const TextStyle(fontSize: 16),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              ElevatedButton(
+                onPressed: _currentStep > 0
+                    ? () => setState(() => _currentStep--)
+                    : null,
+                child: const Text('Previous'),
+              ),
+              ElevatedButton(
+                onPressed: _currentStep < widget.instructions.length - 1
+                    ? () => setState(() => _currentStep++)
+                    : null,
+                child: const Text('Next'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+        ],
+      ),
     );
   }
 }

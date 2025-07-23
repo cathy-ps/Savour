@@ -77,7 +77,7 @@ class _CookbookSelectorDialogState extends State<CookbookSelectorDialog> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.border.withOpacity(0.12),
+                          color: AppColors.border.withValues(alpha: 0.12),
                           blurRadius: 2,
                           offset: const Offset(0, 1),
                         ),

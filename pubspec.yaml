@@ -51,6 +51,7 @@ dependencies:
   google_nav_bar: ^5.0.7
   shadcn_ui: ^0.28.0
   google_fonts: ^6.2.1
+  lottie: ^3.1.0
 
 
   google_generative_ai: ^0.4.7
@@ -91,7 +92,7 @@ flutter:
 
   assets:
     - assets/.env
-    - assets/images/avatar.png
+    - assets/images/chatbot.json
     - assets/images/bg.jpg    
     - assets/images/list_bg.jpg
 

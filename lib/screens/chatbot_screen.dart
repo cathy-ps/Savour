@@ -313,7 +313,7 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                     ),
                     decoration: BoxDecoration(
                       color: msg.isUser
-                          ? AppColors.primary.withOpacity(0.2)
+                          ? AppColors.primary.withValues(alpha: 0.2)
                           : AppColors.card,
                       borderRadius: BorderRadius.circular(12),
                     ),

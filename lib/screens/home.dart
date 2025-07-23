@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:savourai/constant/colors.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// import 'package:savourai/widgets/custom_search_bar.dart';
+import 'package:lottie/lottie.dart';
 import 'settings.dart';
 
 import 'package:savourai/models/recipe_model.dart';
@@ -455,7 +455,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                                   ),
                                   const SizedBox(height: 2),
                                   const Text(
-                                    'What would you like to cook today?',
+                                    'What would you like today?',
                                     style: TextStyle(
                                       color: AppColors.black,
                                       fontSize: 16,
@@ -681,7 +681,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
             MaterialPageRoute(builder: (context) => const ChatbotScreen()),
           );
         },
-        child: const Icon(Icons.chat),
+        backgroundColor: AppColors.transparent,
+        child: Lottie.asset(
+          'assets/images/chatbot.json',
+          width: 40,
+          height: 40,
+        ),
       ),
     );
   }

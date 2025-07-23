@@ -214,7 +214,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
                   Row(
                     children: [
                       Expanded(
-                        child: CustomSearchBar(                          
+                        child: CustomSearchBar(
                           hintIcon: const Icon(Icons.search, size: 20),
                           controller: _searchController,
                           hintText: 'Search cookbooks...',
@@ -369,7 +369,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
                                 borderRadius: BorderRadius.circular(18),
                                 // boxShadow: [
                                 //   BoxShadow(
-                                //     color: AppColors.border.withOpacity(0.2),
+                                //     color: AppColors.border.withValues(alpha:(0.2),
                                 //     blurRadius: 4,
                                 //     offset: Offset(0, 2),
                                 //   ),

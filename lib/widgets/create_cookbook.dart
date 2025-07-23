@@ -77,6 +77,7 @@ class _CreateCookbookDialogState extends State<CreateCookbookDialog> {
           ),
           const SizedBox(height: 20),
           ShadInputFormField(
+            textCapitalization: TextCapitalization.words,
             controller: _controller,
             id: 'cookbook_name',
             label: const Text('Cookbook Name'),

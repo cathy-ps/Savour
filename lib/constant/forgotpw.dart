@@ -102,7 +102,7 @@ class LogoWithTitle extends StatelessWidget {
                       height: 1.5,
                       color: Theme.of(
                         context,
-                      ).textTheme.bodyLarge!.color!.withOpacity(0.64),
+                      ).textTheme.bodyLarge!.color!.withValues(alpha:0.64),
                     ),
                   ),
                 ),

@@ -13,6 +13,8 @@ import '../utils/favorite_handler.dart';
 import '../providers/cookbook_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shadcn_ui/shadcn_ui.dart';
+import '../widgets/cookbook_selector_dialog.dart';
 
 class ChatbotScreen extends ConsumerStatefulWidget {
   const ChatbotScreen({super.key});
@@ -25,21 +27,37 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  // Cookbook and favorite state
+  List<Cookbook> _userCookbooks = [];
+  List<String> _userCookbookDocIds = [];
+  final Map<String, List<String>> _cookbookRecipeIds = {};
+  String? _userId;
+
   @override
   void initState() {
     super.initState();
     _fetchUserCookbooks();
+    // Add welcome/instruction message at the start of the chat
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final chatbot = ref.read(chatbotProvider.notifier);
+      if (chatbot.state.messages.isEmpty) {
+        chatbot.addMessage(
+          "👋 Hi! I'm your SavourAI Assistant.\n\nYou can ask me for cooking tips, ingredient substitutions, or type a list of ingredients (comma separated) to get recipe suggestions.\n\nTry: 'chicken, rice, peas' or 'How do I substitute eggs in baking?'\n\nWhat would you like help with today?",
+          false,
+        );
+      }
+    });
   }
 
   Future<void> _fetchUserCookbooks() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return;
+    _userId = FirebaseAuth.instance.currentUser?.uid;
+    if (_userId == null) return;
 
     try {
       // Fetch cookbooks
       final cookbooksSnap = await FirebaseFirestore.instance
           .collection('users')
-          .doc(userId)
+          .doc(_userId)
           .collection('cookbooks')
           .get();
 
@@ -56,12 +74,144 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
         cookbookRecipeIds[doc.id] = recipesSnap.docs.map((r) => r.id).toList();
       }
 
+      // Update local state
+      setState(() {
+        _userCookbooks = cookbooks;
+        _userCookbookDocIds = docIds;
+        _cookbookRecipeIds.addAll(cookbookRecipeIds);
+      });
+
       // Update providers
       ref.read(userCookbooksProvider.notifier).state = cookbooks;
       ref.read(userCookbookDocIdsProvider.notifier).state = docIds;
       ref.read(cookbookRecipeIdsProvider.notifier).state = cookbookRecipeIds;
+
+      // Update saved recipe IDs
+      final allSavedIds = <String>{};
+      for (final ids in cookbookRecipeIds.values) {
+        allSavedIds.addAll(ids);
+      }
+      ref.read(savedRecipeIdsProvider.notifier).state = allSavedIds;
     } catch (e) {
       debugPrint('Error fetching cookbooks: $e');
+    }
+  }
+
+  String _getRecipeId(Recipe recipe) {
+    if (recipe.id.isNotEmpty) return recipe.id;
+    if (recipe.title.isNotEmpty) return recipe.title.hashCode.toString();
+    return UniqueKey().toString();
+  }
+
+  bool _isRecipeSaved(Recipe recipe) {
+    final id = _getRecipeId(recipe);
+    final savedIds = ref.watch(savedRecipeIdsProvider);
+    return savedIds.contains(id);
+  }
+
+  Future<void> _onFavoriteTap(Recipe recipe) async {
+    if (_userId == null) {
+      ShadToaster.maybeOf(context)?.show(
+        const ShadToast(
+          description: Text('You must be logged in to save recipes'),
+        ),
+      );
+      return;
+    }
+
+    final id = _getRecipeId(recipe);
+    final savedIds = ref.read(savedRecipeIdsProvider.notifier);
+
+    // If recipe is already saved in any cookbook, unsave from all
+    final savedCookbookIds = _cookbookRecipeIds.entries
+        .where((entry) => entry.value.contains(id))
+        .map((entry) => entry.key)
+        .toList();
+
+    if (savedCookbookIds.isNotEmpty) {
+      // Remove from all cookbooks where it is saved
+      for (final cookbookId in savedCookbookIds) {
+        final recipeRef = FirebaseFirestore.instance
+            .collection('users')
+            .doc(_userId)
+            .collection('cookbooks')
+            .doc(cookbookId)
+            .collection('recipes')
+            .doc(id);
+        await recipeRef.delete();
+        setState(() {
+          _cookbookRecipeIds[cookbookId]?.remove(id);
+        });
+
+        // Show toast for removal
+        final cookbookIdx = _userCookbookDocIds.indexOf(cookbookId);
+        if (cookbookIdx != -1) {
+          final cookbook = _userCookbooks[cookbookIdx];
+          ShadToaster.maybeOf(context)?.show(
+            ShadToast(
+              description: Text('Recipe removed from ${cookbook.title}'),
+            ),
+          );
+        }
+      }
+
+      // Update global saved state
+      savedIds.update((state) {
+        final newSet = Set<String>.from(state);
+        newSet.remove(id);
+        return newSet;
+      });
+      return;
+    }
+
+    // Otherwise, prompt user to select a cookbook
+    if (_userCookbooks.isEmpty || _userCookbookDocIds.isEmpty) {
+      ShadToaster.maybeOf(
+        context,
+      )?.show(const ShadToast(description: Text('No cookbooks available')));
+      return;
+    }
+
+    // Show the selector dialog
+    final selectedCookbookId = await showDialog<String>(
+      context: context,
+      builder: (context) => CookbookSelectorDialog(cookbooks: _userCookbooks),
+    );
+
+    if (selectedCookbookId == null || selectedCookbookId.trim().isEmpty) {
+      return;
+    }
+
+    // Save the recipe to the selected cookbook
+    final recipeRef = FirebaseFirestore.instance
+        .collection('users')
+        .doc(_userId)
+        .collection('cookbooks')
+        .doc(selectedCookbookId)
+        .collection('recipes')
+        .doc(id);
+
+    await recipeRef.set(recipe.toJson());
+
+    setState(() {
+      _cookbookRecipeIds[selectedCookbookId] ??= [];
+      _cookbookRecipeIds[selectedCookbookId]!.add(id);
+    });
+
+    // Update global saved state
+    savedIds.update((state) {
+      final newSet = Set<String>.from(state);
+      newSet.add(id);
+      return newSet;
+    });
+
+    // Show toast notification
+    final cookbookIdx = _userCookbookDocIds.indexOf(selectedCookbookId);
+    if (cookbookIdx != -1) {
+      final cookbook = _userCookbooks[cookbookIdx];
+      ShadToaster.maybeOf(context)?.show(
+        ShadToast(description: Text('Recipe added to ${cookbook.title}')),
+      );
     }
   }
 
@@ -132,7 +282,6 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(chatbotProvider);
-    final savedRecipeIds = ref.watch(savedRecipeIdsProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -210,31 +359,14 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
                             itemCount: state.lastRecipes.length,
                             itemBuilder: (context, i) {
                               final recipe = state.lastRecipes[i];
+                              final isSaved = _isRecipeSaved(recipe);
                               return SizedBox(
                                 width: 150,
                                 child: RecipeCardForBot(
                                   recipe: recipe,
                                   imageUrl: recipe.imageUrl,
-                                  isFavorite: savedRecipeIds.contains(
-                                    recipe.id,
-                                  ),
-                                  onFavoriteTap: () async {
-                                    await handleFavoriteTap(
-                                      context: context,
-                                      ref: ref,
-                                      recipe: recipe,
-                                      userId: ref.read(userIdProvider) ?? '',
-                                      cookbookRecipeIds: ref.read(
-                                        cookbookRecipeIdsProvider,
-                                      ),
-                                      userCookbooks: ref.read(
-                                        userCookbooksProvider,
-                                      ),
-                                      userCookbookDocIds: ref.read(
-                                        userCookbookDocIdsProvider,
-                                      ),
-                                    );
-                                  },
+                                  isFavorite: isSaved,
+                                  onFavoriteTap: () => _onFavoriteTap(recipe),
                                   onTap: () {
                                     Navigator.of(context).push(
                                       MaterialPageRoute(

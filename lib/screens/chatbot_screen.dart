@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:savourai/widgets/custom_app_bar.dart';
 import '../providers/home_search_provider.dart';
 import '../widgets/recipe_card_for_bot.dart';
 import 'recipe_detail.dart';
@@ -284,10 +285,11 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
     final state = ref.watch(chatbotProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('SavourAI Assistant'),
+      appBar: CustomAppBar(
+        title: 'SavourAI Assistant',
         backgroundColor: AppColors.primary,
       ),
+
       body: Column(
         children: [
           Expanded(

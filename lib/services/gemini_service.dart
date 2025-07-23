@@ -66,6 +66,83 @@ User: $userInput
         'Sorry, I could not find an answer to your question.';
   }
 
+  /// Generates recipe suggestions based on dietary preferences
+  /// If no preferences are provided, it will generate general recipe suggestions
+  Future<List<Recipe>> getDietaryPreferenceRecipes(
+    List<String> dietaryPreferences,
+  ) async {
+    final preferences = dietaryPreferences.isNotEmpty
+        ? dietaryPreferences.join(", ")
+        : "general, balanced diet";
+
+    final prompt =
+        '''
+You are a smart recipe recommender that specializes in dietary preferences. Generate 5 delicious recipes that match the following dietary preferences: $preferences.
+If no specific preferences were provided, suggest 5 well-balanced, generally appealing recipes that most people would enjoy.
+
+Return the recipes as a JSON array. Each recipe must be a JSON object with these fields:
+- title (string)
+- category (string, e.g. breakfast, lunch, dinner, snack, dessert)
+- cuisine (string, e.g. Italian, Asian, American, etc.)
+- difficulty (string: easy, medium, hard)
+- cooking_duration (integer, in minutes)
+- description (string, 1-2 sentences)
+- servings (integer, default 2)
+- ingredients (array of objects: { name, quantity, unit })
+- instructions (array of strings, step-by-step)
+- nutrition (object: { calories, protein, carbs, fat } per serving, all numbers)
+
+Make sure recipes are appropriate for the dietary preferences specified. Format the output as a valid JSON array only, no extra text.
+''';
+
+    try {
+      final content = Content.text(prompt);
+      final response = await _model.generateContent([content]);
+      final text = response.text;
+      if (text == null || text.trim().isEmpty) return [];
+
+      // Extract the first valid JSON array from the response
+      String? jsonArray;
+      final arrayStart = text.indexOf('[');
+      final arrayEnd = text.lastIndexOf(']');
+      if (arrayStart != -1 && arrayEnd != -1 && arrayEnd > arrayStart) {
+        jsonArray = text.substring(arrayStart, arrayEnd + 1);
+      } else {
+        jsonArray = '[]';
+      }
+
+      final data = jsonDecode(jsonArray);
+      if (data is List) {
+        List<Recipe> recipes = [];
+        for (final e in data) {
+          String title = e['title'] as String? ?? '';
+
+          // Get image from Google Image Search
+          String? imageUrl = _googleImageService != null
+              ? await _googleImageService!.searchImage(title)
+              : null;
+          e['imageUrl'] = imageUrl ?? '';
+
+          // Get video from YouTube
+          String? videoUrl = _youtubeService != null
+              ? await _youtubeService!.searchFirstVideoUrl(title)
+              : null;
+          e['videoUrl'] = videoUrl;
+
+          recipes.add(Recipe.fromJson(e, title.hashCode.toString()));
+        }
+        return recipes;
+      } else {
+        print('[GeminiService] Response was not a List: $data');
+        return [];
+      }
+    } catch (e, st) {
+      print('[GeminiService] Error during dietary recipe generation: $e');
+      print('[GeminiService] Stacktrace: $st');
+      return [];
+    }
+  }
+
   GoogleImageSearchService? _googleImageService;
 
   void setGoogleImageSearchService(GoogleImageSearchService service) {

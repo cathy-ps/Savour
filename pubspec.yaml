@@ -37,6 +37,7 @@ dependencies:
   cloud_firestore: ^5.4.1
   flutter_local_notifications: ^19.3.1
   timezone: ^0.10.0
+  intl: 0.20.2
 
   # State management
   flutter_riverpod: ^2.5.1

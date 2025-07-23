@@ -13,6 +13,7 @@ class Recipe {
   final String imageUrl;
   final bool isFavorite;
   final String? videoUrl;
+  final DateTime createdAt; // New field for tracking when recipes are saved
 
   Recipe({
     required this.id,
@@ -29,7 +30,10 @@ class Recipe {
     required this.imageUrl,
     this.isFavorite = false,
     this.videoUrl,
-  });
+    DateTime? createdAt, // Optional parameter with default value
+  }) : createdAt =
+           createdAt ??
+           DateTime.now(); // Default to current time if not provided
 
   factory Recipe.fromJson(Map<String, dynamic> json, String id) => Recipe(
     id: id,
@@ -58,6 +62,11 @@ class Recipe {
               ? false
               : json['isFavorite'].toString() == 'true'),
     videoUrl: json['videoUrl'] ?? json['video_url'],
+    createdAt: json['createdAt'] != null
+        ? (json['createdAt'] is String
+              ? DateTime.tryParse(json['createdAt'])
+              : (json['createdAt'] as DateTime))
+        : DateTime.now(),
   );
 
   // For use with Firestore DocumentSnapshot
@@ -78,6 +87,7 @@ class Recipe {
     'imageUrl': imageUrl,
     'isFavorite': isFavorite,
     if (videoUrl != null) 'videoUrl': videoUrl,
+    'createdAt': createdAt.toIso8601String(),
   };
 }
 

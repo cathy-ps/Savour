@@ -43,7 +43,10 @@ class HomeSearchNotifier extends StateNotifier<HomeSearchState> {
   final GeminiService _geminiService;
   HomeSearchNotifier(this._geminiService) : super(HomeSearchState.initial());
 
-  Future<void> searchRecipes(String input) async {
+  Future<void> searchRecipes(
+    String input, {
+    List<String>? dietaryPreferences,
+  }) async {
     state = state.copyWith(
       loading: true,
       error: null,
@@ -60,6 +63,7 @@ class HomeSearchNotifier extends StateNotifier<HomeSearchState> {
       final googleImageApiKey = dotenv.env['custom_api_key'];
       final recipes = await _geminiService.generateRecipes(
         ingredients,
+        dietaryPreferences: dietaryPreferences,
         youtubeApiKey: youtubeApiKey,
         googleImageApiKey: googleImageApiKey,
       );

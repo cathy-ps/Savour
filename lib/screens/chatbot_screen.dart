@@ -15,6 +15,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
 import '../widgets/cookbook_selector_dialog.dart';
+import '../providers/user_profile_provider.dart';
 
 class ChatbotScreen extends ConsumerStatefulWidget {
   const ChatbotScreen({super.key});
@@ -235,7 +236,15 @@ class _ChatbotScreenState extends ConsumerState<ChatbotScreen> {
 
     // Simple check: if user input contains commas, treat as ingredients
     if (text.contains(',')) {
-      await ref.read(homeSearchProvider.notifier).searchRecipes(text);
+      // Fetch dietary preferences from user profile
+      final userProfileAsync = ref.read(userProfileProvider);
+      List<String> dietaryPreferences = [];
+      if (userProfileAsync is AsyncData && userProfileAsync.value != null) {
+        dietaryPreferences = userProfileAsync.value!.dietaryPreferences;
+      }
+      await ref
+          .read(homeSearchProvider.notifier)
+          .searchRecipes(text, dietaryPreferences: dietaryPreferences);
       final recipes = ref.read(homeSearchProvider).recipes;
       chatbot.setLastRecipes(recipes);
       chatbot.addMessage(

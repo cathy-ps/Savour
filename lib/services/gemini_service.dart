@@ -214,14 +214,19 @@ Make sure recipes are appropriate for the dietary preferences specified. Format 
   /// Generates recipes using Gemini and parses them into a List<Recipe>.
   Future<List<Recipe>> generateRecipes(
     List<String> ingredients, {
+    List<String>? dietaryPreferences,
     String? cuisine,
     String? dietaryNotes,
     String? youtubeApiKey,
     String? googleImageApiKey,
   }) async {
+    final dietaryString =
+        (dietaryPreferences != null && dietaryPreferences.isNotEmpty)
+        ? '\nDietary preferences to consider: ${dietaryPreferences.join(", ")}. Do NOT include any ingredients that violate these preferences.'
+        : '';
     final prompt =
         '''
-You are a smart recipe generator for people with limited cooking experience and limited ingredients. Suggest at least 5 creative recipes that use ONLY these ingredients: ${ingredients.join(", ")}, plus common pantry items (salt, pepper, oil, water, sugar, basic spices). Do NOT include any other ingredients that require a store trip.
+You are a smart recipe generator for people with limited cooking experience and limited ingredients. Suggest at least 5 creative recipes that use ONLY these ingredients: ${ingredients.join(", ")}, plus common pantry items (salt, pepper, oil, water, sugar, basic spices). Do NOT include any other ingredients that require a store trip.$dietaryString
 
 Return the recipes as a JSON array. Each recipe must be a JSON object with these fields:
 - title (string)

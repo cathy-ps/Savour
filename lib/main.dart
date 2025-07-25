@@ -67,7 +67,9 @@ Future<void> initNotifications() async {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Load environment variables
   await dotenv.load(fileName: 'assets/.env');
 

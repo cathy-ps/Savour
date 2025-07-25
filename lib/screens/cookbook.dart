@@ -74,6 +74,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
   Future<void> _fetchCookbooks() async {
     setState(() => _loading = true);
     try {
+      // Fetch cookbook data
       final snap = await FirebaseFirestore.instance
           .collection('users')
           .doc(_userId)
@@ -86,6 +87,7 @@ class _CookbookScreenState extends State<CookbookScreen> {
 
       List<Cookbook> cookbooks = [];
       List<String> cookbookDocIds = [];
+      // Fetch cookbook recipes
       for (var cb in cookbookData) {
         final data = cb['data'] as Map<String, dynamic>;
         final docId = cb['docId'] as String;

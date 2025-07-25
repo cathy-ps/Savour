@@ -50,7 +50,7 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
             .set({'archived': true}, SetOptions(merge: true));
       }
       if (mounted) {
-        widget.onDelete(); // Optionally remove from UI immediately
+        widget.onDelete();
       }
     } else if (!allChecked) {
       _wasAllChecked = false;
@@ -129,16 +129,12 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                   // Update UI immediately
                   ref.read(reminderProvider(list.name).notifier).set(selected);
                   try {
-                    print(
-                      '[DEBUG] Writing reminder to Firestore: $selected for list: ${list.name}',
-                    );
                     await FirebaseFirestore.instance
                         .collection('users')
                         .doc(userId)
                         .collection('shoppingLists')
                         .doc(list.id)
                         .set({'reminder': selected}, SetOptions(merge: true));
-                    print('[DEBUG] Firestore write successful');
 
                     // Schedule local notification to remind user to buy groceries for this recipe
                     if (selected.isAfter(DateTime.now())) {
@@ -148,7 +144,6 @@ class _ShoppingListCardState extends State<ShoppingListCard> {
                         selected,
                         'Don\'t forget to buy groceries for "${list.name}"!',
                       );
-                      print('[DEBUG] Local notification scheduled');
                     } else {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(

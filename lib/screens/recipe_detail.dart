@@ -406,6 +406,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                         ),
 
                       Padding(
+                        // Recipe title and metadata
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
                           vertical: 16,
@@ -766,6 +767,7 @@ class _RecipeDetailScreenState extends ConsumerState<RecipeDetailScreen>
                   ),
                 ),
                 Positioned(
+                  // Bottom action buttons
                   left: 0,
                   right: 0,
                   bottom: 0,

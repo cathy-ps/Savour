@@ -17,7 +17,7 @@ Future<String?> fetchPexelsImage(String query, String apiKey) async {
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
     if (data['photos'] != null && data['photos'].isNotEmpty) {
-      return data['photos'][0]['src']['medium']; // or 'large', 'original', etc.
+      return data['photos'][0]['src']['medium'];
     }
   }
   return null; // fallback if no image found
@@ -25,13 +25,15 @@ Future<String?> fetchPexelsImage(String query, String apiKey) async {
 
 class GeminiService {
   GoogleImageSearchService? _googleImageSearchService;
+  PexelsService? _pexelsService;
+  YoutubeSearchService? _youtubeService;
 
+  //// Set the YouTube search service
   void setGoogleImageApiKey(String apiKey) {
     _googleImageSearchService = GoogleImageSearchService(apiKey: apiKey);
   }
 
-  PexelsService? _pexelsService;
-
+  /// Set the Pexels search service
   void setPexelsService(PexelsService service) {
     _pexelsService = service;
   }
@@ -146,6 +148,7 @@ Make sure recipes are appropriate for the dietary preferences specified. Format 
               print('[GeminiService] Pexels error: $pexelsErr');
             }
           }
+
           // Fallback to Google Image Search if Pexels fails or returns no image
           if ((imageUrl == null || imageUrl.isEmpty) &&
               _googleImageSearchService != null) {
@@ -177,21 +180,19 @@ Make sure recipes are appropriate for the dietary preferences specified. Format 
     }
   }
 
-  YoutubeSearchService? _youtubeService;
-
   void setYoutubeApiKey(String apiKey) {
     _youtubeService = YoutubeSearchService(apiKey);
   }
 
-  Future<String?> _getValidYoutubeUrl(String title, String? url) async {
-    final isValid =
-        url != null &&
-        (url.startsWith('https://www.youtube.com/watch?v=') ||
-            url.startsWith('https://youtu.be/'));
-    if (isValid) return url;
-    if (_youtubeService == null) return null;
-    return await _youtubeService!.searchFirstVideoUrl(title);
-  }
+  // Future<String?> _getValidYoutubeUrl(String title, String? url) async {
+  //   final isValid =
+  //       url != null &&
+  //       (url.startsWith('https://www.youtube.com/watch?v=') ||
+  //           url.startsWith('https://youtu.be/'));
+  //   if (isValid) return url;
+  //   if (_youtubeService == null) return null;
+  //   return await _youtubeService!.searchFirstVideoUrl(title);
+  // }
 
   Future<String?> generateText(String prompt) async {
     try {
@@ -211,7 +212,7 @@ Make sure recipes are appropriate for the dietary preferences specified. Format 
     _model = GenerativeModel(model: 'gemini-2.0-flash', apiKey: apiKey);
   }
 
-  /// Generates recipes using Gemini and parses them into a List<Recipe>.
+  /// Generates recipes using Gemini and parses them into Recipe objects.
   Future<List<Recipe>> generateRecipes(
     List<String> ingredients, {
     List<String>? dietaryPreferences,
@@ -251,6 +252,7 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
       final response = await _model.generateContent([content]);
       final text = response.text;
       if (text == null || text.trim().isEmpty) return [];
+
       // Extract the first valid JSON array from the response
       String? jsonArray;
       final arrayStart = text.indexOf('[');
@@ -265,8 +267,8 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
         List<Recipe> recipes = [];
         for (final e in data) {
           String title = e['title'] as String? ?? '';
-          // Get image from Pexels
           String? imageUrl;
+          // Get image from Pexels
           if (_pexelsService != null) {
             final images = await _pexelsService!.searchImages(
               title,
@@ -274,7 +276,9 @@ Make sure the ingredient list and quantities are for 1 serving and scalable. Do 
             );
             imageUrl = images.isNotEmpty ? images.first : null;
           }
+
           e['imageUrl'] = imageUrl ?? '';
+
           // Get video from YouTube
           String? videoUrl = _youtubeService != null
               ? await _youtubeService!.searchFirstVideoUrl(title)

@@ -15,6 +15,8 @@ class Cookbook {
     required this.color,
   });
 
+  // Factory constructor to create a Cookbook instance from JSON
+  // and a document ID (for Firestore)
   factory Cookbook.fromJson(Map<String, dynamic> json, String id) {
     return Cookbook(
       id: id,
@@ -31,6 +33,7 @@ class Cookbook {
   static Cookbook fromFirestore(Map<String, dynamic> json, String docId) =>
       Cookbook.fromJson(json, docId);
 
+  // Method to convert a Cookbook instance to JSON
   Map<String, dynamic> toJson() {
     return {
       'title': title,
